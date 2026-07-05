@@ -20,6 +20,7 @@ import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedCitizenRouteImport } from './routes/_authenticated/citizen'
 import { Route as AuthenticatedBenefitsRouteImport } from './routes/_authenticated/benefits'
 import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
+import { Route as AuthenticatedSchemesIdRouteImport } from './routes/_authenticated/schemes.$id'
 
 const StoriesRoute = StoriesRouteImport.update({
   id: '/stories',
@@ -75,6 +76,11 @@ const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
   path: '/assistant',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSchemesIdRoute = AuthenticatedSchemesIdRouteImport.update({
+  id: '/schemes/$id',
+  path: '/schemes/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/partner': typeof AuthenticatedPartnerRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
+  '/schemes/$id': typeof AuthenticatedSchemesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/partner': typeof AuthenticatedPartnerRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
+  '/schemes/$id': typeof AuthenticatedSchemesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/_authenticated/partner': typeof AuthenticatedPartnerRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
+  '/_authenticated/schemes/$id': typeof AuthenticatedSchemesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/partner'
     | '/profile'
     | '/api/stt'
+    | '/schemes/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/partner'
     | '/profile'
     | '/api/stt'
+    | '/schemes/$id'
   id:
     | '__root__'
     | '/'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/_authenticated/partner'
     | '/_authenticated/profile'
     | '/api/stt'
+    | '/_authenticated/schemes/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -242,6 +254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssistantRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/schemes/$id': {
+      id: '/_authenticated/schemes/$id'
+      path: '/schemes/$id'
+      fullPath: '/schemes/$id'
+      preLoaderRoute: typeof AuthenticatedSchemesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -251,6 +270,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCitizenRoute: typeof AuthenticatedCitizenRoute
   AuthenticatedPartnerRoute: typeof AuthenticatedPartnerRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedSchemesIdRoute: typeof AuthenticatedSchemesIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -259,6 +279,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCitizenRoute: AuthenticatedCitizenRoute,
   AuthenticatedPartnerRoute: AuthenticatedPartnerRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedSchemesIdRoute: AuthenticatedSchemesIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
