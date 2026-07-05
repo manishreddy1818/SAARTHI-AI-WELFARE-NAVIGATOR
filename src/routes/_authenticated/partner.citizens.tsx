@@ -8,7 +8,7 @@ import { PageShell } from "@/components/app-shell";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { listPartnerCitizens } from "@/lib/partner.functions";
-import { StatusBadge } from "./partner";
+import { StatusBadge } from "@/components/partner-status-badge";
 
 const searchSchema = z.object({
   status: z
