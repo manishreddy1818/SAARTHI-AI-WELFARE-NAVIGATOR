@@ -3,12 +3,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
-import { Loader2, RotateCcw, Send, Sparkles, Square, Volume2, VolumeX } from "lucide-react";
+import { Loader2, RotateCcw, Send, Sparkles, Square, Trash2, Volume2, VolumeX } from "lucide-react";
 import { PageShell } from "@/components/app-shell";
 import { VoiceOrb } from "@/components/voice-orb";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { sendMessage, listConversations, getConversation, getProfile } from "@/lib/citizen.functions";
+import { sendMessage, listConversations, getConversation, getProfile, deleteConversation } from "@/lib/citizen.functions";
 import { toast } from "sonner";
 import { useSpeech } from "@/hooks/use-speech";
 import { VOICE_OPTIONS, ACCENT_OPTIONS } from "@/hooks/use-speech";
@@ -49,6 +49,22 @@ function AssistantPage() {
   const getConv = useServerFn(getConversation);
   const send = useServerFn(sendMessage);
   const getProf = useServerFn(getProfile);
+  const delConv = useServerFn(deleteConversation);
+
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => delConv({ data: { id } }),
+    onSuccess: (_res, id) => {
+      toast.success("Conversation deleted");
+      if (activeId === id) {
+        setActiveId(null);
+        setIsNew(true);
+        setMessages([]);
+        setSuggested([]);
+      }
+      qc.invalidateQueries({ queryKey: ["conversations"] });
+    },
+    onError: (err: any) => toast.error(err?.message ?? "Could not delete"),
+  });
 
   const convsQ = useQuery({ queryKey: ["conversations"], queryFn: () => listConv() });
   const profQ = useQuery({ queryKey: ["profile"], queryFn: () => getProf() });
@@ -157,14 +173,31 @@ function AssistantPage() {
           <ul className="mt-3 space-y-1">
             {(convsQ.data ?? []).map((c) => (
               <li key={c.id}>
-                <button
-                  onClick={() => { setActiveId(c.id); setIsNew(false); }}
-                  className={`w-full truncate rounded-xl px-3 py-2 text-left text-sm transition-colors ${
+                <div
+                  className={`group flex items-center gap-1 rounded-xl pr-1 transition-colors ${
                     activeId === c.id ? "bg-secondary text-secondary-foreground" : "hover:bg-secondary/60 text-muted-foreground"
                   }`}
                 >
-                  {c.title}
-                </button>
+                  <button
+                    onClick={() => { setActiveId(c.id); setIsNew(false); }}
+                    className="flex-1 truncate rounded-xl px-3 py-2 text-left text-sm"
+                  >
+                    {c.title}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm("Delete this conversation? This cannot be undone.")) {
+                        deleteMut.mutate(c.id);
+                      }
+                    }}
+                    className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 focus:opacity-100"
+                    aria-label="Delete conversation"
+                    title="Delete conversation"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </li>
             ))}
             {(convsQ.data ?? []).length === 0 && (
