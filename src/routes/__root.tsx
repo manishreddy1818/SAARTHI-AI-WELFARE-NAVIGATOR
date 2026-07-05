@@ -93,6 +93,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "SAARTHI — Your AI Guide to Welfare Benefits" },
+      { name: "description", content: "SAARTHI helps every citizen discover, understand and access the government welfare schemes they are eligible for — through a friendly voice-first AI companion." },
+      { property: "og:description", content: "SAARTHI helps every citizen discover, understand and access the government welfare schemes they are eligible for — through a friendly voice-first AI companion." },
+      { name: "twitter:description", content: "SAARTHI helps every citizen discover, understand and access the government welfare schemes they are eligible for — through a friendly voice-first AI companion." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/67f4eb00-71da-48f6-b095-76a92cbd861c/id-preview-adf0a145--0f6d826d-3fbe-4131-838b-e49997215e1b.lovable.app-1783257715716.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/67f4eb00-71da-48f6-b095-76a92cbd861c/id-preview-adf0a145--0f6d826d-3fbe-4131-838b-e49997215e1b.lovable.app-1783257715716.png" },
     ],
     links: [
       {
