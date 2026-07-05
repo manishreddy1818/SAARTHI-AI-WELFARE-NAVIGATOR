@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StoriesRouteImport } from './routes/stories'
 import { Route as RoleSelectRouteImport } from './routes/role-select'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -16,6 +17,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
 import { Route as AuthenticatedCitizenRouteImport } from './routes/_authenticated/citizen'
 
+const StoriesRoute = StoriesRouteImport.update({
+  id: '/stories',
+  path: '/stories',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoleSelectRoute = RoleSelectRouteImport.update({
   id: '/role-select',
   path: '/role-select',
@@ -50,6 +56,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/role-select': typeof RoleSelectRoute
+  '/stories': typeof StoriesRoute
   '/citizen': typeof AuthenticatedCitizenRoute
   '/partner': typeof AuthenticatedPartnerRoute
 }
@@ -57,6 +64,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/role-select': typeof RoleSelectRoute
+  '/stories': typeof StoriesRoute
   '/citizen': typeof AuthenticatedCitizenRoute
   '/partner': typeof AuthenticatedPartnerRoute
 }
@@ -66,20 +74,28 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/role-select': typeof RoleSelectRoute
+  '/stories': typeof StoriesRoute
   '/_authenticated/citizen': typeof AuthenticatedCitizenRoute
   '/_authenticated/partner': typeof AuthenticatedPartnerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/role-select' | '/citizen' | '/partner'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/role-select'
+    | '/stories'
+    | '/citizen'
+    | '/partner'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/role-select' | '/citizen' | '/partner'
+  to: '/' | '/auth' | '/role-select' | '/stories' | '/citizen' | '/partner'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/role-select'
+    | '/stories'
     | '/_authenticated/citizen'
     | '/_authenticated/partner'
   fileRoutesById: FileRoutesById
@@ -89,10 +105,18 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   RoleSelectRoute: typeof RoleSelectRoute
+  StoriesRoute: typeof StoriesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/stories': {
+      id: '/stories'
+      path: '/stories'
+      fullPath: '/stories'
+      preLoaderRoute: typeof StoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/role-select': {
       id: '/role-select'
       path: '/role-select'
@@ -156,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   RoleSelectRoute: RoleSelectRoute,
+  StoriesRoute: StoriesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
