@@ -4,14 +4,38 @@ import { ArrowRight, Mic, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { PageShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/brand";
+import { CinematicSplash } from "@/components/cinematic-splash";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
 });
 
 function LandingPage() {
+  const [showSplash, setShowSplash] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const seen = window.sessionStorage.getItem("saarthi:splash");
+      if (!seen) setShowSplash(true);
+    } catch {
+      setShowSplash(true);
+    }
+  }, []);
+
+  const finishSplash = () => {
+    try {
+      window.sessionStorage.setItem("saarthi:splash", "1");
+    } catch {
+      // ignore
+    }
+    setShowSplash(false);
+  };
+
   return (
     <PageShell>
+      {showSplash && <CinematicSplash onFinish={finishSplash} />}
       <Hero />
       <TrustStrip />
       <HowItWorks />
