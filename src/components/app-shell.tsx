@@ -1,5 +1,17 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LogOut, MessageCircle, LayoutDashboard, Sparkles, Users, FileText, ClipboardList, User } from "lucide-react";
+import {
+  LogOut,
+  MessageCircle,
+  LayoutDashboard,
+  Sparkles,
+  Users,
+  FileText,
+  ClipboardList,
+  User,
+  Briefcase,
+  PlusCircle,
+  Search,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand";
@@ -20,12 +32,19 @@ export function AppHeader() {
   }
 
   const showAuthCta = !loading && !user;
+  const isPartner = pathname.startsWith("/partner");
   const links: Array<{ to: string; label: string }> = user
-    ? [
-        { to: "/citizen", label: "Home" },
-        { to: "/assistant", label: "Assistant" },
-        { to: "/benefits", label: "Benefits" },
-      ]
+    ? isPartner
+      ? [
+          { to: "/partner", label: "Dashboard" },
+          { to: "/partner/citizens", label: "Citizens" },
+          { to: "/partner/intake", label: "New intake" },
+        ]
+      : [
+          { to: "/citizen", label: "Home" },
+          { to: "/assistant", label: "Assistant" },
+          { to: "/benefits", label: "Benefits" },
+        ]
     : [{ to: "/stories", label: "Stories" }];
 
   return (
@@ -60,7 +79,7 @@ export function AppHeader() {
           ) : null}
         </nav>
       </div>
-      {user && <CitizenSubnav pathname={pathname} />}
+      {user && (isPartner ? <PartnerSubnav pathname={pathname} /> : <CitizenSubnav pathname={pathname} />)}
     </header>
   );
 }
@@ -83,6 +102,38 @@ function CitizenSubnav({ pathname }: { pathname: string }) {
           return (
             <Link
               key={it.to}
+              to={it.to}
+              className={`inline-flex shrink-0 items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                active
+                  ? "bg-[var(--trust)] text-primary-foreground"
+                  : "text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              <it.icon className="h-4 w-4" />
+              {it.label}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PartnerSubnav({ pathname }: { pathname: string }) {
+  const items = [
+    { to: "/partner", label: "Dashboard", icon: Briefcase },
+    { to: "/partner/citizens", label: "Citizens", icon: Users },
+    { to: "/partner/intake", label: "New intake", icon: PlusCircle },
+    { to: "/partner/citizens", label: "Search", icon: Search },
+  ];
+  return (
+    <div className="border-t border-border/60 bg-background/70">
+      <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-2 py-2 sm:px-6">
+        {items.map((it) => {
+          const active = pathname === it.to;
+          return (
+            <Link
+              key={`${it.to}-${it.label}`}
               to={it.to}
               className={`inline-flex shrink-0 items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
                 active
