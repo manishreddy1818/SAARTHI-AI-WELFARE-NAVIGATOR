@@ -1,353 +1,484 @@
-# SAARTHI — Design System & Screen Inventory (Discovery Phase II)
+# SAARTHI — AI & Data Architecture (Discovery Phase III)
 
-Discovery only. No code, components, or pages in this phase. This document builds on the approved Product Blueprint (`.lovable/plan.md`) and becomes the design contract every screen must honor.
+Discovery only. No code. Builds on the approved Product Blueprint and Design System. This is the final planning document before implementation.
 
-Design north-star: **Apple Human Interface × Perplexity AI × Linear × ChatGPT Voice Mode**. Never a government portal.
-
----
-
-## PART A — DESIGN SYSTEM
-
-### A1. Brand Feel
-- Warm, calm, confident. A trusted welfare officer, not a bureaucrat.
-- Voice-first, not form-first.
-- Generous whitespace. Big type. One clear action per screen.
-
-### A2. Color System (semantic tokens, oklch)
-
-Light mode is the default; dark mode is a first-class peer.
-
-| Token | Purpose | Direction |
-|---|---|---|
-| `--background` | App canvas | Warm off-white ivory (light) / deep ink navy (dark) |
-| `--foreground` | Primary text | Near-black warm charcoal / warm off-white |
-| `--surface` | Cards, sheets | 1 step lighter than background with subtle warmth |
-| `--surface-elevated` | Modals, popovers | Slight tint + soft shadow |
-| `--primary` | SAARTHI signature | Deep saffron-indigo blend — warm, Indian-rooted, non-partisan |
-| `--primary-foreground` | Text on primary | Ivory |
-| `--primary-glow` | Voice orb halo | Higher-chroma variant of primary |
-| `--accent` | Highlights, focus | Warm gold (trust, dignity) |
-| `--success` | Eligible / Approved | Calm sage green |
-| `--warning` | Missing docs / Renewals | Warm amber |
-| `--destructive` | Rejected / Errors | Muted terracotta (never harsh red) |
-| `--muted` / `--muted-foreground` | Secondary text | Warm neutral grays |
-| `--border` | Hairlines | Very low contrast |
-| `--ring` | Focus | 2px accent, always visible |
-
-Gradients (as tokens, not one-off inline):
-- `--gradient-primary` — hero backgrounds, voice orb
-- `--gradient-aurora` — subtle multi-hue wash for splash + AI screens
-- `--gradient-surface` — card hover lift
-
-Shadows:
-- `--shadow-soft` — resting card
-- `--shadow-lift` — hover / active card
-- `--shadow-orb` — voice orb glow (color-mixed from `--primary`)
-
-Rule: **no hardcoded colors in components**. Every color flows through `src/styles.css` tokens.
-
-### A3. Typography
-
-Two-family system, both with excellent Devanagari + Latin coverage:
-- **Display / Headings:** a modern humanist sans (candidates: *Inter Display*, *General Sans*, *Sora*) — for confident, quiet headlines.
-- **Body / UI:** a highly-readable neutral sans (candidates: *Inter*, *Manrope*) — for long-form scheme text.
-- **Indic pairing:** *Noto Sans Devanagari* / *Noto Sans Tamil* / etc. loaded per active language.
-
-Scale (mobile-first, generous):
-- Display XL 48 / 56 — Splash, hero
-- Display L 36 / 44 — Section headers
-- Title 28 / 36 — Screen titles
-- Heading 22 / 30 — Card titles
-- Body L 18 / 28 — Default body (larger than typical for accessibility)
-- Body M 16 / 24 — Secondary text
-- Caption 14 / 20 — Metadata
-- Micro 12 / 16 — Reserved (never for content)
-
-Rules: minimum body size 16px, minimum line-height 1.5, max line-length 68ch, headings never ALL CAPS except tiny eyebrow labels.
-
-### A4. Spacing, Radius, Elevation
-- **Spacing scale:** 4, 8, 12, 16, 20, 24, 32, 40, 56, 72, 96. Screens breathe.
-- **Radius:** `sm 10 / md 14 / lg 20 / xl 28 / 2xl 36 / full`. Cards default to `xl`. Voice orb `full`.
-- **Elevation:** three tiers only — resting, hover, floating (modal/sheet). Never harsh drop shadows.
-- **Glassmorphism:** used sparingly on the AI Assistant surface and the persistent voice button — `backdrop-blur` + `--surface` at 70% + hairline border.
-
-### A5. Iconography & Imagery
-- Line-icon set, 1.5px stroke, rounded caps. Consistent optical size.
-- Illustrations: warm, human, culturally-inclusive; avoid clip-art stock. Prefer abstract shapes + real photography of people.
-- No flags, no emblems, no government seals — reinforces "not a sarkari site."
-
-### A6. Motion Language
-- Curve: `cubic-bezier(0.22, 1, 0.36, 1)` (calm ease-out) for entrances; symmetric for exits.
-- Durations: 150ms micro, 240ms standard, 420ms hero.
-- Signature motions:
-  - **Voice pulse** — orb breathes at 1.2s cycle when listening, faster + amplitude-reactive when speaking.
-  - **AI thinking** — three dots morph into a shimmer bar; never a spinner.
-  - **Card hover** — 2px lift + shadow deepen, no scale-up above 1.02.
-  - **Route transitions** — soft cross-fade + 8px vertical slide.
-  - **Skeletons** — shimmer, not spinners; match final layout exactly.
-- Respect `prefers-reduced-motion` globally.
-
-### A7. Component Primitives (design contract — implementation later)
-Buttons (Primary / Secondary / Ghost / Destructive / Icon / Voice), Input, Textarea, Select, Combobox, Checkbox, Radio, Switch, Slider, Chip / Tag, Badge (Eligible/Pending/Approved/Rejected/Renewal), Card, ListItem, SchemeCard, FamilyMemberCard, DocumentCard, ApplicationCard, Tabs, Segmented Control, Modal, Sheet (bottom, mobile), Drawer, Toast, Tooltip, Popover, Progress (linear + step), Skeleton, EmptyState, Avatar, LanguagePicker, VoiceOrb (S/M/L), AI Message Bubble (user / assistant / system), ConfidenceMeter, EligibilityTrace, StepIndicator, BottomNav, Sidebar (partner), Header.
-
-Every interactive element: min 44×44px target, visible focus ring, keyboard accessible, screen-reader labeled.
-
-### A8. Voice UX Primitives
-- **Voice Orb** — the product's mascot. Four states: idle, listening, thinking, speaking. Each state has a distinct halo + motion signature but the same silhouette.
-- **Push-to-talk** — persistent floating button; long-press to speak, release to send; barge-in supported.
-- **Transcript rail** — every voice turn produces text; text is always the source of truth.
-- **Language chip** — always visible near the orb; one tap to switch.
-
-### A9. Accessibility Contract
-- WCAG 2.2 AA minimum, AAA for body text contrast.
-- Every icon-only control has `aria-label`.
-- Every image has meaningful `alt` (or `alt=""` if decorative).
-- Landmarks: single `<main>`, proper heading order, skip-link on every page.
-- Full keyboard operability, visible focus, no keyboard traps.
-- Mobile viewport uses `dvh`, tap targets ≥ 44px.
-- "Simple Language Mode" toggle globally reduces reading grade.
+Guiding rule: **Every AI decision must be explainable, grounded, auditable, and reversible.** The AI never fabricates schemes, never issues an eligibility verdict without a source rule, and never persists sensitive data without explicit consent.
 
 ---
 
-## PART B — INFORMATION ARCHITECTURE & NAVIGATION
+## PART A — SYSTEM OVERVIEW
 
-### B1. Route Map (flat, TanStack Start conventions)
+SAARTHI is organized around a single **AI Orchestrator** that the user never sees. The user only ever talks to "SAARTHI." The Orchestrator routes each turn through specialized agents, merges their outputs, and returns a single explainable answer.
 
 ```text
-/                         Splash Experience (first visit) → Landing
-/welcome                  Landing (marketing home)
-/journey                  Choose Your Journey
-/auth/login               Login
-/auth/signup              Signup
-/auth/forgot              Forgot password
-/auth/language            Language + accessibility setup
-/app                      Citizen shell (bottom nav)
-  /app                    Citizen Dashboard (home)
-  /app/assistant          AI Assistant
-  /app/benefits           Benefits Feed
-  /app/benefits/$id       Scheme Details
-  /app/family             Family Dashboard
-  /app/family/$memberId   Member detail
-  /app/documents          Documents
-  /app/applications       Applications
-  /app/applications/$id   Application detail
-  /app/profile            Profile
-/stories                  Citizen Journey Gallery (public)
-/stories/$slug            Story deep-dive (interactive demo)
-/partner                  Welfare Partner shell (sidebar)
-  /partner                Partner Dashboard
-  /partner/citizens       Citizens list
-  /partner/intake         Voice Intake
-  /partner/reports        Reports
-  /partner/impact         Impact Dashboard
-  /partner/profile        Profile
+┌───────────────────────────────────────────────────────────────────┐
+│                          CLIENT (Web/PWA)                          │
+│   Voice Orb · Transcript · Cards · Consent prompts · A11y layer    │
+└───────────────▲───────────────────────────────────▲───────────────┘
+                │ audio/text                        │ streamed reply
+                │                                   │
+        ┌───────┴───────┐                   ┌───────┴────────┐
+        │  STT service  │                   │  TTS service   │
+        └───────┬───────┘                   └───────▲────────┘
+                │ transcript+lang                   │ audio+captions
+                ▼                                   │
+┌───────────────────────────────────────────────────┴───────────────┐
+│                        AI ORCHESTRATOR                             │
+│  Turn state · Policy · Safety · Routing · Explanation assembly     │
+└──┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬───────┘
+   │      │      │      │      │      │      │      │      │
+   ▼      ▼      ▼      ▼      ▼      ▼      ▼      ▼      ▼
+ Conv   Profile Intent Scheme Elig.  Prior. Docs   Apply Opport.
+ Agent  Agent   Agent  Intel  Reason Agent  Agent  Guide Unlock
+                       Agent  Agent                Agent Agent
+                              │
+                              ▼
+                  ┌───────────────────────┐
+                  │   MEMORY AGENT (R/W)  │
+                  └──────────┬────────────┘
+                             ▼
+   ┌─────────────────────────────────────────────────────────────┐
+   │  DATA PLANE                                                 │
+   │  Citizen Store · Family · Documents · Applications ·        │
+   │  Conversations · Consents · Notifications                   │
+   │                                                             │
+   │  KNOWLEDGE PLANE                                            │
+   │  Scheme Knowledge Base (versioned) · Rules Engine ·         │
+   │  Vector Index · Source Registry                             │
+   └─────────────────────────────────────────────────────────────┘
 ```
 
-### B2. Navigation Patterns
-
-**Citizen (mobile-first):** Bottom nav — *Home · Benefits · Family · Documents · Profile*. Persistent floating **Voice Orb** above the nav on every screen.
-
-**Partner (desktop-first):** Left sidebar — *Dashboard · Citizens · Voice Intake · Reports · Impact · Profile*. Top bar with global search + language.
-
-**Public (marketing):** Slim top nav — logo, *Stories*, *For Partners*, *Sign in*, *Start AI* (primary).
-
-Role switcher lives in Profile for users who hold multiple roles.
+Design invariants:
+- The Orchestrator is the only component that talks to agents.
+- Agents are **pure functions of (Profile + Context + KB)** — no agent writes to user data directly; only the Memory Agent writes, and only with reasons attached.
+- Every assistant message carries an **Explanation Envelope** (sources, confidence, trace).
+- The Rules Engine is deterministic; LLMs only interpret and explain rules, never override them.
 
 ---
 
-## PART C — COMPLETE SCREEN INVENTORY
+## PART B — THE AI ORCHESTRATOR
 
-Each screen specifies: **Purpose · Layout · Components · Content · Primary Action · Secondary Actions · Empty/Loading/Error states · Accessibility notes · Motion notes**.
+Responsibilities per turn:
+1. **Ingest** — receive `{turn_id, user_id, input(text/audio), language, consent_snapshot}`.
+2. **Normalize** — STT if needed; language detect; simple-language mode flag.
+3. **Route** — call Intent Agent → decide which downstream agents run and in what order.
+4. **Coordinate** — run agents (parallel where safe), enforce timeouts, retry on transient failures.
+5. **Reconcile** — merge outputs into a candidate response; run Safety & Policy checks.
+6. **Explain** — attach Explanation Envelope (sources, confidence, next action).
+7. **Persist** — hand deltas to Memory Agent (profile updates, saved schemes, consent events).
+8. **Emit** — return streamed tokens + structured UI payload (cards, chips) + optional TTS.
 
-### Screen 1 — Splash Experience  `/`
-- **Purpose:** Create emotional connection in ≤ 8 seconds. Introduce SAARTHI's soul before its UI.
-- **Layout:** Full-bleed aurora gradient; centered stage; no chrome.
-- **Sequence (auto-advancing, skippable):**
-  1. Animated logomark draws in (0–1.2s).
-  2. Line 1: *"Crores of citizens miss benefits they deserve."* (fade up).
-  3. Line 2: *"Not anymore."*
-  4. SAARTHI wordmark + tagline: *"Your AI Welfare Navigator."*
-  5. Voice greeting (autoplay only if user gestured; otherwise button): *"Namaste. Main SAARTHI hoon."*
-  6. Primary CTA: **Get Started** → `/journey`.
-- **Components:** Logomark, GradientBackdrop, VoiceOrb (idle → speaking), TextRevealSequence, PrimaryButton, SkipLink.
-- **States:** first-visit only (localStorage flag); returning users go straight to `/welcome` or `/app`.
-- **Motion:** slow, cinematic; single skip control; respects reduced-motion (static poster).
-- **A11y:** Skip button focused first; captions for the voice greeting; screen reader reads the full sequence at once.
+Policies enforced centrally:
+- **No-fabrication:** every scheme mention must resolve to a `scheme_id` in the KB.
+- **Consent gating:** any agent request for sensitive fields checks the live Consent record before asking the user.
+- **Confidence floor:** eligibility verdicts below the floor render as *"Check with officer"* rather than *"Eligible."*
+- **Language coherence:** the response language matches the last user turn unless the user switches.
+- **Budget:** per-turn token/time budget; degrade gracefully to a shorter answer under pressure.
 
-### Screen 2 — Landing Page  `/welcome`
-- **Purpose:** Convert curious visitors into first-time citizens/partners.
-- **Sections (top-to-bottom):**
-  1. **Hero** — Big claim, subhead, Primary **Start AI** + Secondary **Explore Citizen Stories**. Ambient voice orb.
-  2. **Problem** — Three stat cards: schemes count, avg unclaimed benefit, awareness gap.
-  3. **Solution** — SAARTHI in one sentence + product screenshot mock.
-  4. **Features** — Bento grid: Voice-first · Multilingual · Family mode · Document vault · Guided applications · Volunteer-assist.
-  5. **How It Works** — 4-step narrative (Talk → Match → Explain → Apply).
-  6. **AI Benefits** — Why AI beats forms (dignity, speed, personalization, explainability).
-  7. **Citizen Stories** — Carousel of 5 personas from the Journey Gallery.
-  8. **Testimonials** — NGOs, volunteers, officers.
-  9. **FAQ** — Data privacy, cost (free), languages, offline, official-source guarantee.
-  10. **Footer** — Language switch, Partners CTA, contact, privacy, T&C, credits.
-- **Primary Action:** Start AI (persistent in header after scroll).
-- **A11y:** Semantic sections with landmarks; heading order strict.
+Turn state (in-memory, per conversation):
 
-### Screen 3 — Choose Your Journey  `/journey`
-- **Purpose:** Route the user to the right product surface.
-- **Layout:** Three oversized cards on desktop, stacked on mobile.
-  - **Citizen** — "Find benefits for me or my family." → `/auth/signup?role=citizen`
-  - **Welfare Partner** — "Screen citizens, run campaigns, measure impact." → `/auth/signup?role=partner`
-  - **Explore Citizen Stories** — "See SAARTHI in action, no signup." → `/stories`
-- **Components:** JourneyCard (icon, title, one-line, sample tags, CTA), LanguageChip in header.
-- **Motion:** Cards lift + halo on hover; enter with staggered fade.
-
-### Screen 4 — Authentication  `/auth/*`
-- **Purpose:** Frictionless entry. OTP-first; passwords are secondary.
-- **Screens:**
-  - **Login** — Phone/email + OTP; "Continue with Google" (optional).
-  - **Signup** — Same as login + name, role (prefilled from `?role`), consent checkbox.
-  - **Forgot Password** — Only for email accounts.
-  - **Language Selection** — Big language chips (native script rendered natively); default from device.
-  - **Accessibility Options** — Text size (S/M/L/XL), high-contrast toggle, voice-first toggle, reduce motion.
-- **Layout:** Single centered card, generous padding, one primary action per step.
-- **A11y:** Autofocus first input; OTP fields as one accessible group; error text tied via `aria-describedby`.
-
-### Screen 5 — Citizen Dashboard  `/app`
-- **Purpose:** "Where do I stand today?" — a calm, non-overwhelming home.
-- **Layout (mobile-first, single column):**
-  1. **Greeting header** — "Namaste, Ramesh ji" + weather-of-benefits sentence: "3 new schemes match you this month."
-  2. **Estimated Benefits card** — headline number ("₹48,200/year unlocked") + trend chip.
-  3. **Recommended Actions** — 2–3 next best steps (e.g. "Upload Aadhaar to unlock 4 schemes").
-  4. **Applications strip** — horizontal cards of in-flight applications with status.
-  5. **Family Members strip** — avatars + per-person eligible count.
-  6. **Recent Activity** — timeline of AI conversations, saved schemes, doc uploads.
-  7. **Quick AI button** (large) + persistent Voice Orb.
-- **Primary Action:** Talk to SAARTHI (opens `/app/assistant`).
-- **Empty state:** first-time users see a friendly intake CTA instead of the strips.
-
-### Screen 6 — AI Assistant  `/app/assistant`
-- **Purpose:** The heart of the product. A calm, focused conversation surface.
-- **Layout:** Full-height, single-column, minimal chrome.
-  - **Top bar:** back, language chip, "New conversation".
-  - **Center stage:** large **Voice Orb** with state animation and live captions.
-  - **Transcript rail:** message bubbles above/below orb; auto-scroll.
-  - **Suggested prompts:** 3 chips ("Am I eligible for pension?", "Schemes for my daughter", "Explain PMAY").
-  - **Composer:** push-to-talk button (primary), text input (secondary), attach doc, stop-speaking.
-- **States of Orb:** idle (breathe) · listening (amplitude ring) · thinking (shimmer bar) · speaking (waveform halo).
-- **Behaviors:** barge-in, live transcript, source citations under assistant messages, "Why this answer?" reveals eligibility trace, save-to-benefits action on any scheme mention.
-- **Empty:** greeting + suggested prompts.
-- **Error:** "I didn't catch that" with retry + switch-to-text.
-- **A11y:** captions on by default; full keyboard alternative for every voice action.
-
-### Screen 7 — Benefits Feed  `/app/benefits`
-- **Purpose:** Personalized, ranked list of schemes.
-- **Layout:** Filter bar (All · Eligible · In Progress · Saved · Renewals) + list of **SchemeCard**s.
-- **SchemeCard content:** Scheme name, one-line summary, **Priority** badge, **Estimated Benefit** (₹/year or one-time), **Eligibility Status** (Likely / Possibly / Check with officer), **Confidence meter**, actions: **Apply · Save · Learn More**.
-- **Sort/Filter:** by benefit value, ease of claim, renewal urgency, category.
-- **Empty:** intake CTA. **Loading:** shimmer cards. **Error:** retry + offline notice.
-
-### Screen 8 — Scheme Details  `/app/benefits/$id`
-- **Purpose:** Deep, trustworthy, plain-language explanation of one scheme.
-- **Sections:**
-  1. Hero — Name, category, benefit headline, eligibility badge, confidence.
-  2. **Description** — 3rd-grade language.
-  3. **Why you're eligible** — bullet list mapped to profile facts.
-  4. **Eligibility rules** — expandable full rule text with source link.
-  5. **Required documents** — checklist tied to Documents vault (green tick if uploaded).
-  6. **Application steps** — numbered stepper with estimated time each.
-  7. **Timeline** — expected processing time, past user averages.
-  8. **Official link** — clearly labeled outbound.
-  9. Sticky action bar: **Apply with SAARTHI (primary) · Save · Ask AI**.
-- **A11y:** eligibility trace fully keyboard-reachable; outbound links marked.
-
-### Screen 9 — Family Dashboard  `/app/family`
-- **Purpose:** Manage entitlements for the whole household.
-- **Layout:** Grid of **FamilyMemberCard**s + "Add member" CTA.
-- **Each card:** avatar, name, relationship, age, eligible-count, in-progress-count, tap → member detail.
-- **Member detail** (`/app/family/$memberId`): profile summary, eligible schemes, active applications, uploaded documents, progress bar toward "fully covered."
-- **Empty:** guided prompt to add first member (voice or form).
-
-### Screen 10 — Documents  `/app/documents`
-- **Purpose:** Reusable vault; kills the biggest friction in applications.
-- **Layout:** Two tabs — **My Documents** · **Checklist**.
-- **My Documents:** grid of DocumentCards (thumbnail, name, expiry chip, linked-to badge).
-- **Checklist:** categories (Identity, Address, Income, Caste, Disability, Bank) with per-item status: uploaded / missing / expiring.
-- **Actions:** Upload (camera / gallery / DigiLocker), Download, Delete, Share to application.
-- **Suggestions:** "Upload PAN to unlock 3 more schemes."
-- **A11y:** OCR'd docs get alt text; upload is keyboard + voice accessible.
-
-### Screen 11 — Applications  `/app/applications`
-- **Purpose:** Track everything in flight.
-- **Layout:** Segmented control (All · Pending · Submitted · Approved · Rejected) + list of **ApplicationCard**s.
-- **Card:** scheme name, status badge, last update, next action CTA.
-- **Detail** (`/app/applications/$id`): step timeline with completed / current / upcoming states, documents attached, officer contact if available, "Talk to a volunteer" fallback.
-- **Empty:** "No applications yet — let's find your benefits."
-
-### Screen 12 — Citizen Journey Gallery  `/stories` + `/stories/$slug`
-- **Purpose:** Show, don't tell. A public showcase of SAARTHI in action.
-- **Gallery layout:** Bento of 5 preloaded personas — **Senior Citizen · Farmer · Student · Woman Entrepreneur · Disabled Citizen**.
-- **Story layout:** interactive replayable conversation with the AI assistant (scripted, not live). Play/pause, step-through, "Try this yourself" CTA that seeds `/app/assistant` with the same profile.
-- **Empty/Error:** static transcript fallback if audio can't play.
-
-### Screen 13 — Welfare Partner Dashboard  `/partner`
-- **Purpose:** Operational cockpit for NGO/partner staff.
-- **Layout (desktop):** Sidebar + top bar + workspace.
-- **Widgets:**
-  - KPI row: Citizens Assisted · Applications · Follow-ups Due · Impact (₹ unlocked).
-  - **Quick Intake** button (opens Voice Intake).
-  - Recent citizens table with filter/search.
-  - Follow-ups queue with due-today highlight.
-  - Reports shortcut.
-
-### Screen 14 — Impact Dashboard  `/partner/impact`
-- **Purpose:** Prove the outcome; export for funders/government.
-- **Widgets:** Citizens Helped · Benefits Unlocked (₹) · Applications Submitted · Approval Rate · Family Coverage %. Trend charts (weekly/monthly), geography breakdown, top schemes, unclaimed opportunities.
-- **Actions:** Export CSV/PDF, share link, date range.
-
-### Screen 15 — Profile  `/app/profile` and `/partner/profile`
-- **Purpose:** Personal control center.
-- **Sections:** Personal Information · Language · Accessibility (text size, contrast, reduce motion, simple-language mode) · Voice Settings (persona voice, autoplay, captions) · Notifications (renewals, new-scheme alerts, family) · Role Switch · Data & Consent · Logout.
-- **A11y:** every toggle has a clear label + short helper text.
-
-### Screen 16 — Voice Intake (Partner)  `/partner/intake`
-- **Purpose:** Volunteer speaks on behalf of a citizen; SAARTHI captures a Citizen Profile in one session.
-- **Layout:** Split — left: live transcript + extracted profile fields updating in real time; right: Voice Orb + citizen consent chip + save/print buttons.
-- **Outcome:** creates a citizen record + a shareable benefits summary (WhatsApp / PDF / print).
+```text
+TurnState {
+  conversation_id, user_id, actor_id (self|volunteer_of|family_of),
+  language, simple_mode, consents[],
+  profile_snapshot, recent_messages[N],
+  active_intents[], pending_clarifications[],
+  budget { tokens, ms, tool_calls }
+}
+```
 
 ---
 
-## PART D — CROSS-CUTTING PATTERNS
+## PART C — SPECIALIZED AGENTS
 
-### D1. States (mandatory for every screen)
-- **Loading:** skeletons matching final layout, never spinners.
-- **Empty:** friendly illustration + one clear next step.
-- **Error:** plain-language message + retry + human-help escape hatch.
-- **Offline:** banner + read-only cached view where possible.
+Each agent is specified as: **Purpose · Inputs · Outputs · Tools · Guardrails**.
 
-### D2. Feedback
-- Toasts for background actions; inline confirmations for destructive actions; haptic-like micro-motion on success.
+### C1. Conversation Agent
+- **Purpose:** Natural dialogue, tone, clarifications, empathy.
+- **Inputs:** TurnState, latest user message, suggested reply skeleton from Orchestrator.
+- **Outputs:** Final natural-language reply (in user's language, at target reading level), list of `follow_up_questions[]`, `next_suggested_prompts[]`.
+- **Tools:** none (pure language). Reads reply skeleton + Explanation Envelope.
+- **Guardrails:** never asserts eligibility on its own — must use the reasoning already attached. Never introduces a scheme name that isn't in the payload.
 
-### D3. Language & Simplicity
-- Every string authored in English then translated; no idioms that break in translation.
-- Simple Language Mode strips jargon and shortens sentences globally.
+### C2. Citizen Profile Agent
+- **Purpose:** Extract and maintain a single, continuously updated Citizen Profile.
+- **Inputs:** user turns, optional document OCR events, volunteer intake forms.
+- **Outputs:** structured `ProfileDelta` — additions/updates to fields with `source`, `confidence`, `consent_required`.
+- **Fields:** age, gender, state, district, block/village, occupation, income_band, education, family composition, disability status, caste category (opt-in), documents held, bank account presence, land holding, house type.
+- **Guardrails:**
+  - Sensitive fields (caste, disability, exact income, religion) require a matching consent record — else the field is queued as `pending_consent`.
+  - Every field carries `provenance` (user_said / doc_extracted / volunteer_entered) and `last_verified_at`.
+  - Never overwrites a user-confirmed value silently; produces a `conflict` event.
 
-### D4. Privacy & Trust
-- First-time sensitive prompt (caste, disability, income) is always explained: *"Why we ask · How we use it · You can skip."*
-- "Sources" chip on every AI answer.
-- Data & Consent screen: what we store, export my data, delete my data.
+### C3. Intent Detection Agent
+- **Purpose:** Decide what the user is trying to do this turn.
+- **Intents:** `find_schemes`, `check_eligibility`, `application_help`, `document_help`, `family_welfare`, `renewal_help`, `general_q`, `human_handoff`, `switch_language`, `stop`.
+- **Outputs:** ranked `intents[]` with confidence; `slots` (e.g. target person = self/family member id, scheme_id if named).
+- **Guardrails:** low-confidence → orchestrator asks one clarifying question via Conversation Agent.
+
+### C4. Scheme Intelligence Agent
+- **Purpose:** Retrieve candidate schemes from the KB — never invent.
+- **Inputs:** Profile snapshot, intent slots, geography, language.
+- **Method:** hybrid retrieval — structured filter (state/central + applicable_states + category + beneficiary tags) + vector search over scheme descriptions + rule-tag boosting.
+- **Outputs:** `candidates[] = {scheme_id, version, match_reasons[], retrieval_score}`.
+- **Guardrails:** results must include `scheme_id` present in KB at the returned `version`; empty results are honest (no filler).
+
+### C5. Eligibility Reasoning Agent
+- **Purpose:** Deterministic verdict + human explanation per candidate scheme.
+- **Method:** Rules Engine evaluates each scheme's rule tree against the Profile. LLM only translates results into human language. **The verdict is the rules engine's, not the LLM's.**
+- **Verdicts:** `eligible`, `likely_eligible`, `need_more_info`, `not_currently_eligible`.
+- **Outputs per scheme:**
+  ```text
+  {
+    scheme_id, version,
+    verdict, confidence (0–1),
+    matched_rules[], failed_rules[], missing_facts[],
+    explanation_short, explanation_long,
+    source_refs[]  // exact URL + clause id in KB
+  }
+  ```
+- **Guardrails:** never emits `eligible` if any `failed_rule` exists; missing facts trigger a targeted clarification, not a guess.
+
+### C6. Benefit Prioritization Agent
+- **Purpose:** Rank the eligible + likely-eligible set for the user's context.
+- **Score = w1·FinancialImpact + w2·SocialImpact + w3·Urgency + w4·DeadlineProximity + w5·Confidence + w6·FamilyImpact − w7·EffortToApply.**
+- **Inputs:** eligibility outputs, benefit amounts, deadlines, family size, ease-of-claim tag.
+- **Outputs:** ordered `recommendations[]` with per-item score components (for transparency chip).
+- **Guardrails:** weights are configurable per persona (senior/farmer/etc) and per volunteer campaign; changes are logged.
+
+### C7. Document Intelligence Agent
+- **Purpose:** Reason about the citizen's document set.
+- **Inputs:** documents on file (with expiry + type), documents required by target schemes.
+- **Outputs:** `{missing[], expiring_soon[], reusable_across_schemes[], suggested_next_upload}`.
+- **Tools:** OCR extraction (name/DOB/ID number), expiry parser, DigiLocker connector (future).
+- **Guardrails:** never asserts a document is "valid" — only "present, expiring, or missing." Human review for OCR conflicts.
+
+### C8. Application Guidance Agent
+- **Purpose:** Turn a scheme into a step-by-step application journey.
+- **Outputs:** `{steps[], estimated_timeline, required_office, official_portal, next_action, offline_alternative}`.
+- **Guardrails:** steps must be derived from KB's `application_process`; never invents portals. Marks "assisted mode available" when a volunteer network covers the district.
+
+### C9. Opportunity Unlock Agent
+- **Purpose:** Proactive, forward-looking recommendations.
+- **Method:** simulate hypothetical profile changes ("if income certificate added", "if child turns 6", "if disability certified") and re-run eligibility to find newly unlocked schemes.
+- **Outputs:** `unlocks[] = {trigger, unlocked_schemes[], estimated_gain}`.
+- **Guardrails:** framed as opportunities, never as pressure; sensitive triggers respect consent.
+
+### C10. Memory Agent
+- **Purpose:** Sole writer to the data plane on the AI's behalf.
+- **Writes:** ProfileDeltas (with provenance), saved schemes, conversation turns, consent events, notifications, application state transitions.
+- **Reads:** anything the Orchestrator needs to hydrate TurnState.
+- **Guardrails:** every write carries `{actor, source_turn_id, reason, consent_id?}`; supports undo/rollback; enforces per-role write scopes.
+
+Agent communication pattern:
+
+```text
+Orchestrator ──▶ Intent
+Intent ──▶ Orchestrator
+Orchestrator ──▶ Profile (delta extract)
+Orchestrator ──▶ Scheme Intelligence (retrieve)  ─┐
+                                                  ├─ parallel
+Orchestrator ──▶ Document Intelligence (context) ─┘
+Scheme candidates ──▶ Eligibility Reasoning (per scheme, parallel)
+Eligibility results ──▶ Benefit Prioritization
+Prioritized list ──▶ Application Guidance (top N) + Opportunity Unlock
+All outputs ──▶ Orchestrator (reconcile + Explanation Envelope)
+Orchestrator ──▶ Conversation Agent (final natural reply)
+Orchestrator ──▶ Memory Agent (persist deltas + turn)
+Orchestrator ──▶ Client (stream reply + structured UI payload)
+```
 
 ---
 
-## PART E — DELIVERY CHECKLIST (for next phase)
+## PART D — KNOWLEDGE BASE
 
-Before build begins, the following must be signed off:
-1. Final color values (light + dark) in oklch.
-2. Font choices confirmed (with Indic coverage tested).
-3. Voice orb motion spec (video/gif reference).
-4. Copy tone guide for AI persona (sample prompts + refusals).
-5. Scheme card + Application card visual comps.
-6. Empty/loading/error illustrations set.
+### D1. Scheme record schema
+
+```text
+Scheme {
+  scheme_id: string (stable)
+  version: semver
+  name: { en, hi, ... }               // localized
+  category: enum(pension, health, education, housing, agriculture,
+                 women, disability, employment, financial_inclusion, ...)
+  jurisdiction: { level: central|state, applicable_states[], applicable_districts[]? }
+  description: { en, hi, ... }        // plain-language
+  target_beneficiaries: tag[]         // e.g. senior_citizen, marginal_farmer
+  eligibility_rules: RuleTree         // machine-evaluable (see D2)
+  required_documents: DocRequirement[]
+  financial_benefits: {
+    kind: one_time | recurring | reimbursement | in_kind,
+    amount_inr?: number|range,
+    frequency?: monthly|annual|event,
+    non_monetary?: string
+  }
+  application_process: {
+    channels: [online, offline, csc, camp],
+    steps: Step[],
+    estimated_days: number,
+    responsible_office: string
+  }
+  official_link: url
+  deadlines: { rolling|window|event, dates? }
+  source: { authority, doc_url, retrieved_at, retrieved_by }
+  last_updated: datetime
+  review: { reviewed_by, reviewed_at, review_status }
+}
+```
+
+### D2. Rule representation (deterministic)
+
+Rules are stored as a typed tree the Rules Engine can evaluate without an LLM.
+
+```text
+Rule =
+  | Predicate { field, op(=,≠,<,≤,>,≥,in,not_in,exists), value }
+  | AllOf { rules[] }
+  | AnyOf { rules[] }
+  | NoneOf { rules[] }
+  | Requires { document_type }
+  | Geo { states[]|districts[] }
+  | Age { min?, max? }
+  | Income { max?, band? }
+```
+
+Each leaf carries a `clause_ref` pointing to the exact paragraph in the source PDF/notification — this is what surfaces as the "Why?" citation.
+
+### D3. Storage & retrieval
+
+- **Structured store:** relational tables for `schemes`, `scheme_rules`, `scheme_documents`, `scheme_benefits`, `scheme_versions`.
+- **Vector index:** embeddings of `name + description + beneficiary_tags` per language for hybrid search.
+- **Source registry:** immutable copies of original notifications with retrieval timestamps (audit).
+- **Versioning:** every change bumps `version`; old versions retained so past recommendations remain reproducible.
+- **Review workflow:** proposed diffs → human reviewer → publish → cache invalidation. LLMs may draft updates but never publish.
+
+### D4. Ingestion pipeline
+
+```text
+Government portal / gazette PDF
+     │
+     ▼
+Scraper / uploader (with source URL + timestamp)
+     │
+     ▼
+Extractor (LLM-assisted, structured output)  ──▶ Draft Scheme record
+     │
+     ▼
+Human reviewer (accept / edit / reject)
+     │
+     ▼
+Publish to KB (version++)  ──▶ Vector re-index  ──▶ Cache invalidate
+```
+
+---
+
+## PART E — EXPLAINABLE AI
+
+Every assistant response that includes a recommendation or verdict carries an **Explanation Envelope**:
+
+```text
+Explanation {
+  why_recommended: string         // 1–2 sentence plain language
+  why_eligible: bullet[]          // maps to matched profile facts
+  missing_conditions: bullet[]    // maps to failed rules / missing facts
+  confidence: 0–1 + label(Low/Med/High)
+  required_next_action: string
+  official_source: { title, url, retrieved_at, clause_ref }
+  trust_note: string              // e.g. "Verdict based on rules; contact officer to confirm."
+  trace_id: uuid                  // links to full agent trace for audit
+}
+```
+
+UI contract: the transparency chip on every card reveals this envelope in full. No recommendation ships without a complete envelope.
+
+---
+
+## PART F — VOICE ARCHITECTURE
+
+```text
+Mic capture (PWA)
+   │  16kHz PCM chunks
+   ▼
+Client VAD (voice-activity detection, barge-in)
+   │
+   ▼
+STT service ────► transcript (partial + final) + detected_language
+   │
+   ▼
+Orchestrator (TurnState.language ← detected; if user switched, ack in reply)
+   │
+   ▼
+Agents run (as in Part C)
+   │
+   ▼
+Response Composer ─► text tokens (streamed)
+   │                     │
+   │                     ▼
+   │              Client renders live captions
+   ▼
+TTS service ─► audio stream (streamed sentence-by-sentence)
+   │
+   ▼
+Client audio player (with pause/skip, barge-in cancels playback)
+```
+
+Rules:
+- STT and TTS are always **streamed**, not batch — perceived latency < 800ms for first audio.
+- Language detection runs on every turn; a mid-conversation switch is honored immediately and acknowledged.
+- Every voice turn produces text; text is the source of truth for logs, retries, and audits.
+- Captions on by default. Users can play back any assistant message.
+- Voice persona is configurable (Profile screen): gender, pace, honorific style.
+
+---
+
+## PART G — DATA MODEL
+
+### G1. Entities & relationships
+
+```text
+Citizen 1───* FamilyMember
+Citizen 1───* Document
+Citizen 1───* Application ───1 Scheme (versioned ref)
+Citizen 1───* Recommendation ───1 Scheme (versioned ref)
+Citizen 1───* Conversation 1───* Message
+Citizen 1───* Notification
+Citizen 1───* Consent
+Citizen *───* WelfarePartner   (via AssistedRelationship)
+Scheme 1───* SchemeRule
+Scheme 1───* SchemeDocumentReq
+Scheme 1───* SchemeBenefit
+WelfarePartner 1───* ImpactMetric
+```
+
+### G2. Key fields (contract only, no SQL)
+
+**Citizen** — id, phone, email?, name, language, accessibility_prefs, created_at, roles[].
+**FamilyMember** — id, primary_citizen_id, relationship, name, dob, gender, own_profile_ref?.
+**Document** — id, owner_id (citizen or family member), type, file_ref (encrypted), extracted_fields, issued_on?, expires_on?, verified_status, uploaded_by, created_at.
+**Application** — id, citizen_id, scheme_id, scheme_version, status(started|documents_needed|submitted|approved|rejected|closed), current_step, timeline_events[], assisted_by_partner_id?, next_action, updated_at.
+**Scheme** — see Part D.
+**Recommendation** — id, citizen_id, scheme_id, scheme_version, verdict, confidence, priority_score, explanation_envelope, generated_at, dismissed_at?.
+**Conversation** — id, citizen_id, actor_id, started_at, language, channel(web|whatsapp|ivr).
+**Message** — id, conversation_id, role(user|assistant|system|tool), content, audio_ref?, tokens_in/out, agent_trace_id, created_at.
+**Notification** — id, citizen_id, kind(renewal|new_match|doc_expiring|application_update), channel, payload, sent_at, read_at.
+**Consent** — id, citizen_id, scope(caste|disability|income|share_with_partner|voice_recording_retention|analytics), state(granted|revoked), granted_at, revoked_at?, evidence(turn_id/screen).
+**WelfarePartner** — id, org_name, type(NGO|CSR|SHG|Govt), state, verified, staff_users[].
+**AssistedRelationship** — partner_id, citizen_id, consent_id, scope, created_at, ended_at?.
+**ImpactMetric** — partner_id, period, citizens_assisted, applications, ₹_unlocked, approval_rate, family_coverage_pct.
+
+### G3. Provenance & audit
+
+Every mutable row carries `created_by`, `updated_by`, `source_turn_id?`, `reason?`. Sensitive fields log a read audit (who accessed, when, why).
+
+---
+
+## PART H — PRIVACY & CONSENT
+
+- **Layered consent:** base consent to use SAARTHI + per-scope consents (caste, disability, income, share-with-partner, voice retention, analytics).
+- **Just-in-time prompts:** first time an agent needs a sensitive field, the user sees *"Why we ask · How we use it · You can skip."* The answer is stored as a Consent record with `evidence`.
+- **Revocation is symmetric:** revoking a consent removes the associated fields from active reasoning immediately and schedules deletion per retention policy.
+- **User rights (all self-serve in Profile → Data & Consent):** view all stored data, export (JSON + human PDF), delete account, delete a single field, delete a conversation.
+- **Voice retention:** default = transcript kept, audio auto-deleted after 24h; users can opt into longer retention (with consent).
+- **Data minimization:** agents request only fields they need for the active intent; the Orchestrator strips unneeded fields from prompts.
+- **PII in logs:** redacted at write-time; only `trace_id` links a turn to its raw content in a separately-permissioned store.
+
+---
+
+## PART I — SECURITY & ROLES
+
+Roles (stored in a dedicated `user_roles` table, never on the profile):
+- **Citizen** — owns own data; can invite family members.
+- **Family Manager** — a Citizen with an accepted `AssistedRelationship` for household members; scoped to those members.
+- **Village Volunteer** — can run assisted intake for citizens who granted consent; sees only those citizens.
+- **Welfare Partner Staff** — scoped to their organization's citizens + campaigns.
+- **Partner Admin** — manages staff and campaigns within org.
+- **Government Officer** — read-only aggregate/analytic access; no PII beyond what officer-role policy allows.
+- **SAARTHI Administrator** — platform ops; no default read on citizen PII (break-glass with dual approval + audit).
+
+Enforcement:
+- Row-level access policies at the data layer, keyed off role membership + explicit relationship (partner ↔ citizen via consented `AssistedRelationship`).
+- Sensitive-field access checked additionally against the citizen's active consents.
+- All admin/officer PII access is logged and shown to the citizen in their audit log.
+- No client-side role checks for authorization — client uses roles only for UX gating.
+
+---
+
+## PART J — SCALABILITY
+
+- **Multi-tenant KB:** scheme corpus is partitioned by jurisdiction; a citizen's queries filter to `central ∪ state`. Adding a state = ingest state schemes + tag; no core change.
+- **Multilingual by design:** all user-visible strings + KB descriptions store per-language; response generation localizes on demand.
+- **Channels:** the Orchestrator is channel-agnostic. Adapters for Web/PWA, WhatsApp Business, IVR, and CSC kiosk share one core.
+- **Government integrations:** pluggable connectors (DigiLocker, Aadhaar eKYC, UMANG, state portals). Absence of an API degrades to guided-offline flow, not failure.
+- **Offline-first field ops:** volunteer/kiosk apps queue intakes locally; sync on connectivity; conflict resolution uses provenance + timestamps.
+- **Model portability:** all model calls flow through a provider gateway; models are named per-role (chat, extraction, embeddings, STT, TTS) and swappable without touching agent logic.
+- **Horizontal scale:** Orchestrator is stateless per turn; TurnState is rehydrated from stores; agent calls parallelized where safe.
+- **Caching:** scheme retrievals + rule evaluations cached per `(profile_hash, jurisdiction, kb_version)` for repeat queries.
+
+---
+
+## PART K — GOVERNANCE PRINCIPLES
+
+1. **No silent verdicts** — every eligibility outcome shows its rule trace.
+2. **Rules over LLMs** — deterministic engine owns verdicts; LLMs own language.
+3. **Sourced or silent** — no scheme mentioned without a KB `scheme_id + version`.
+4. **Consent is a record, not a checkbox** — every sensitive read/write ties to a stored Consent.
+5. **Reproducibility** — a past recommendation can be replayed against its `kb_version + profile_snapshot` and produce the same result.
+6. **Human-in-the-loop** — KB updates and any auto-generated scheme content are human-reviewed before publish.
+7. **Dignity in error** — the system never says "you are ineligible" as the final word; it always offers what the user *does* qualify for + who to talk to.
+8. **Auditability** — trace_id on every message; retention policies documented and enforced.
+9. **Right to be forgotten** — delete flows are complete, cascaded, and verifiable.
+10. **Fairness** — prioritization weights are auditable and reviewable per persona/state; bias reviews are quarterly.
+
+---
+
+## PART L — SUCCESS METRICS (measurable)
+
+- **Matching Accuracy** — % of AI-eligible verdicts confirmed by officer/outcome. Target: ≥ 92%.
+- **Grounding Rate** — % of scheme mentions with valid `scheme_id + version + source`. Target: 100% (enforced).
+- **Hallucination Rate** — mentions that fail grounding check. Target: 0 (blocked at Orchestrator).
+- **Conversation Completion Rate** — % of sessions reaching at least one recommendation. Target: ≥ 75%.
+- **Voice Usage** — % of turns via voice. Target: ≥ 60% among mobile users.
+- **Language Distribution** — active languages served / total supported. Watch for underserved languages.
+- **Application Completion Rate** — started → submitted. Target: ≥ 40%.
+- **Approval Rate** — submitted → approved. Baseline set post-launch per scheme.
+- **Benefits Unlocked (₹)** — per citizen, per partner, per state (headline outcome).
+- **Time-to-First-Recommendation** — target ≤ 90 seconds from first turn.
+- **Citizen Satisfaction (CSAT)** — post-conversation micro-survey. Target: ≥ 4.5/5.
+- **Partner Productivity** — citizens screened per volunteer-hour vs. manual baseline. Target: ≥ 5×.
+- **Consent Health** — % of sensitive-field reads with active consent. Target: 100%.
+- **Explanation Coverage** — % of recommendations with complete Explanation Envelope. Target: 100%.
+
+---
+
+## PART M — RISKS & MITIGATIONS
+
+| Risk | Mitigation |
+|---|---|
+| LLM invents a scheme | Grounding check at Orchestrator blocks non-KB `scheme_id`s |
+| Rule interpretation drift | Deterministic Rules Engine; LLM only paraphrases |
+| Sensitive data over-collection | Consent gating + data minimization in prompts |
+| Language quality regressions | Golden-set evaluations per language per release |
+| Model outage | Provider gateway with fallback model per role |
+| KB staleness | Ingestion pipeline + review SLAs + freshness badge on cards |
+| Partner over-reach | Scope-bound `AssistedRelationship`s + audit surfaced to citizen |
+| Voice misrecognition of names/villages | Bias STT with location + user's known entities; confirm before writing |
+| Offline sync conflicts | Provenance + timestamp resolution; volunteer prompted for conflicts |
+
+---
+
+## PART N — DELIVERY CHECKLIST (for build phase)
+
+Before implementation begins, we will need concrete decisions on:
+1. Managed vs self-hosted STT/TTS + language coverage list.
+2. Provider gateway model choices per role (chat, extract, embed, STT, TTS).
+3. KB seed set: which 50–100 schemes ship at MVP, per pilot state.
+4. Consent copy per sensitive scope (legal + plain-language).
+5. Retention windows per data class (audio, transcripts, docs, PII).
+6. Reviewer workflow tooling for KB updates.
+7. Golden evaluation set per language + per persona.
 
 ---
 
 ## Next Step
 
-Approve this Design System & Screen Inventory. On approval, the next discovery artifact is the **AI + Data Architecture** document (scheme knowledge base schema, eligibility engine, agent orchestration, voice pipeline, storage & consent model) — still no code. Only after that is signed off do we move to build.
+Approve this AI & Data Architecture. On approval, we exit discovery and move to **Phase 1 build**: scaffolding the design system tokens, route shell, and the Orchestrator + Rules Engine contracts (still no user-facing UI on day one — foundations first). Each build phase will be scoped and confirmed with you before code lands.
