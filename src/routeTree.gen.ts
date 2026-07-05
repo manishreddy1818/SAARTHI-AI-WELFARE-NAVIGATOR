@@ -14,6 +14,7 @@ import { Route as RoleSelectRouteImport } from './routes/role-select'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiSttRouteImport } from './routes/api/stt'
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
 import { Route as AuthenticatedCitizenRouteImport } from './routes/_authenticated/citizen'
 
@@ -41,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSttRoute = ApiSttRouteImport.update({
+  id: '/api/stt',
+  path: '/api/stt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPartnerRoute = AuthenticatedPartnerRouteImport.update({
   id: '/partner',
   path: '/partner',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/stories': typeof StoriesRoute
   '/citizen': typeof AuthenticatedCitizenRoute
   '/partner': typeof AuthenticatedPartnerRoute
+  '/api/stt': typeof ApiSttRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/stories': typeof StoriesRoute
   '/citizen': typeof AuthenticatedCitizenRoute
   '/partner': typeof AuthenticatedPartnerRoute
+  '/api/stt': typeof ApiSttRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/stories': typeof StoriesRoute
   '/_authenticated/citizen': typeof AuthenticatedCitizenRoute
   '/_authenticated/partner': typeof AuthenticatedPartnerRoute
+  '/api/stt': typeof ApiSttRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -87,8 +96,16 @@ export interface FileRouteTypes {
     | '/stories'
     | '/citizen'
     | '/partner'
+    | '/api/stt'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/role-select' | '/stories' | '/citizen' | '/partner'
+  to:
+    | '/'
+    | '/auth'
+    | '/role-select'
+    | '/stories'
+    | '/citizen'
+    | '/partner'
+    | '/api/stt'
   id:
     | '__root__'
     | '/'
@@ -98,6 +115,7 @@ export interface FileRouteTypes {
     | '/stories'
     | '/_authenticated/citizen'
     | '/_authenticated/partner'
+    | '/api/stt'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,6 +124,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   RoleSelectRoute: typeof RoleSelectRoute
   StoriesRoute: typeof StoriesRoute
+  ApiSttRoute: typeof ApiSttRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -145,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/stt': {
+      id: '/api/stt'
+      path: '/api/stt'
+      fullPath: '/api/stt'
+      preLoaderRoute: typeof ApiSttRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/partner': {
       id: '/_authenticated/partner'
       path: '/partner'
@@ -181,6 +207,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   RoleSelectRoute: RoleSelectRoute,
   StoriesRoute: StoriesRoute,
+  ApiSttRoute: ApiSttRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
