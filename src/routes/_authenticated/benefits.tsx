@@ -1,10 +1,13 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { PageShell } from "@/components/app-shell";
 import { SchemeCard } from "@/components/scheme-card";
-import { getRecommendations } from "@/lib/citizen.functions";
+import { AiSummaryCard, buildAiSummary } from "@/components/ai-summary-card";
+import { AnalyzingSteps } from "@/components/analyzing-steps";
+import { getRecommendations, listFamily } from "@/lib/citizen.functions";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/benefits")({
@@ -16,7 +19,22 @@ export const Route = createFileRoute("/_authenticated/benefits")({
 
 function BenefitsPage() {
   const rec = useServerFn(getRecommendations);
+  const fam = useServerFn(listFamily);
   const q = useQuery({ queryKey: ["recommendations"], queryFn: () => rec() });
+  const famQ = useQuery({ queryKey: ["family"], queryFn: () => fam() });
+  const [analyzing, setAnalyzing] = useState(true);
+
+  useEffect(() => {
+    if (!q.isLoading && q.data) {
+      const t = setTimeout(() => setAnalyzing(false), 900);
+      return () => clearTimeout(t);
+    }
+  }, [q.isLoading, q.data]);
+
+  const summary =
+    q.data?.recommendations && q.data.recommendations.length
+      ? buildAiSummary(q.data.recommendations as any, famQ.data?.length ?? 0)
+      : null;
 
   return (
     <PageShell>
@@ -43,22 +61,24 @@ function BenefitsPage() {
           )}
         </div>
 
-        <div className="mt-8">
-          {q.isLoading ? (
-            <div className="flex min-h-[40vh] items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : q.isError ? (
-            <ErrorState onRetry={() => q.refetch()} />
-          ) : (q.data?.recommendations?.length ?? 0) === 0 ? (
-            <EmptyState />
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {q.data!.recommendations.map((r: any, i: number) => (
-                <SchemeCard key={`${r.scheme.id}-${i}`} rec={r} />
-              ))}
-            </div>
+        <div className="mt-8 space-y-6">
+          {(q.isLoading || analyzing) && !q.isError && (
+            <AnalyzingSteps active={q.isLoading || analyzing} />
           )}
+          {q.isError ? (
+            <ErrorState onRetry={() => q.refetch()} />
+          ) : !analyzing && (q.data?.recommendations?.length ?? 0) === 0 ? (
+            <EmptyState />
+          ) : !analyzing && q.data ? (
+            <>
+              {summary && <AiSummaryCard summary={summary} />}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {q.data.recommendations.map((r: any, i: number) => (
+                  <SchemeCard key={`${r.scheme.id}-${i}`} rec={r} />
+                ))}
+              </div>
+            </>
+          ) : null}
         </div>
       </section>
     </PageShell>
