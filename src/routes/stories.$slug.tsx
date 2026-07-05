@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { PageShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
-import { findJourney, type JourneyStep } from "@/lib/journeys";
+import { findJourney, type Journey, type JourneyStep } from "@/lib/journeys";
 
 export const Route = createFileRoute("/stories/$slug")({
   loader: ({ params }) => {
@@ -60,7 +60,7 @@ export const Route = createFileRoute("/stories/$slug")({
 });
 
 function JourneyPage() {
-  const j = Route.useLoaderData();
+  const j = Route.useLoaderData() as Journey;
   const [playing, setPlaying] = useState(true);
   const [step, setStep] = useState(0);
 
