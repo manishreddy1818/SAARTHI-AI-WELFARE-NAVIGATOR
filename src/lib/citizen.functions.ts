@@ -40,7 +40,7 @@ export const updateProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) => profilePatch.parse(v))
   .handler(async ({ data, context }) => {
-    const cleaned: Record<string, unknown> = {};
+    const cleaned: Record<string, any> = {};
     for (const [k, v] of Object.entries(data)) if (v !== null && v !== undefined) cleaned[k] = v;
     if (Object.keys(cleaned).length === 0) return { ok: true };
 
@@ -51,15 +51,16 @@ export const updateProfile = createServerFn({ method: "POST" })
       .eq("id", context.userId)
       .maybeSingle();
     const merged = { ...(current ?? {}), ...cleaned } as ProfileFacts;
-    cleaned.profile_completeness = profileCompleteness(merged);
-    cleaned.onboarding_done = cleaned.profile_completeness >= 50;
+    const completeness = profileCompleteness(merged);
+    cleaned.profile_completeness = completeness;
+    cleaned.onboarding_done = completeness >= 50;
 
     const { error } = await context.supabase
       .from("profiles")
       .update(cleaned)
       .eq("id", context.userId);
     if (error) throw error;
-    return { ok: true, completeness: cleaned.profile_completeness };
+    return { ok: true, completeness };
   });
 
 // ---------------- Family ----------------
@@ -92,7 +93,8 @@ export const upsertFamily = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) => familyInput.parse(v))
   .handler(async ({ data, context }) => {
-    const row = { ...data, user_id: context.userId };
+    const row: Record<string, any> = { ...data, user_id: context.userId };
+    for (const k of Object.keys(row)) if (row[k] === null) delete row[k];
     const { error } = await context.supabase.from("family_members").upsert(row);
     if (error) throw error;
     return { ok: true };
@@ -137,7 +139,8 @@ export const upsertDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) => docInput.parse(v))
   .handler(async ({ data, context }) => {
-    const row = { ...data, user_id: context.userId };
+    const row: Record<string, any> = { ...data, user_id: context.userId };
+    for (const k of Object.keys(row)) if (row[k] === null) delete row[k];
     const { error } = await context.supabase.from("documents").upsert(row);
     if (error) throw error;
     return { ok: true };
@@ -229,7 +232,7 @@ export const listAllSchemes = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase.from("schemes").select("*").order("name");
     if (error) throw error;
-    return (data ?? []) as Scheme[];
+    return (data ?? []) as any as Scheme[];
   });
 
 export const getScheme = createServerFn({ method: "POST" })
@@ -242,7 +245,7 @@ export const getScheme = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw error;
-    return row as Scheme | null;
+    return row as any as Scheme | null;
   });
 
 // ---------------- Recommendations (deterministic rules engine) ----------------
@@ -258,7 +261,7 @@ export const getRecommendations = createServerFn({ method: "POST" })
     const recs = recommend((schemes ?? []) as unknown as Scheme[], (profile ?? {}) as ProfileFacts, (family ?? []) as any);
     return {
       profile,
-      recommendations: recs.slice(0, 20),
+      recommendations: recs.slice(0, 20) as any,
       completeness: profileCompleteness((profile ?? {}) as ProfileFacts),
     };
   });
