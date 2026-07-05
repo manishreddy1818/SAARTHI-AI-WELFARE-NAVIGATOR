@@ -1,8 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Mic, Sparkles, FileText, Users, Bell } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowRight, ClipboardList, FileText, Mic, Sparkles, Users } from "lucide-react";
 import { PageShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
+import { SchemeCard } from "@/components/scheme-card";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  getRecommendations,
+  listApplications,
+  listFamily,
+  listDocuments,
+} from "@/lib/citizen.functions";
 
 export const Route = createFileRoute("/_authenticated/citizen")({
   head: () => ({
@@ -17,9 +26,22 @@ export const Route = createFileRoute("/_authenticated/citizen")({
 function CitizenDashboard() {
   const { user } = useAuth();
   const name = (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? "friend";
+  const rec = useServerFn(getRecommendations);
+  const listApp = useServerFn(listApplications);
+  const listFam = useServerFn(listFamily);
+  const listDoc = useServerFn(listDocuments);
+  const recsQ = useQuery({ queryKey: ["recommendations"], queryFn: () => rec() });
+  const appsQ = useQuery({ queryKey: ["applications"], queryFn: () => listApp() });
+  const famQ = useQuery({ queryKey: ["family"], queryFn: () => listFam() });
+  const docsQ = useQuery({ queryKey: ["documents"], queryFn: () => listDoc() });
+
+  const completeness = recsQ.data?.completeness ?? 0;
+  const topRecs = (recsQ.data?.recommendations ?? []).slice(0, 3);
+  const activeApps = (appsQ.data ?? []).filter((a: any) => a.status !== "rejected").length;
+
   return (
     <PageShell>
-      <section className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+      <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <div className="flex flex-col gap-1">
           <p className="text-sm font-medium uppercase tracking-widest text-muted-foreground">
             Namaste
@@ -31,97 +53,95 @@ function CitizenDashboard() {
             Welcome, {name}.
           </h1>
           <p className="mt-2 max-w-xl text-muted-foreground">
-            Your SAARTHI is ready. Start a short conversation and we'll begin matching
-            you to the welfare benefits you may qualify for.
+            Here's your welfare journey — your assistant, your matches, your family, and your paperwork.
           </p>
         </div>
 
-        <div className="mt-8 grid gap-6 md:grid-cols-[1.3fr,1fr]">
-          <div className="rounded-3xl border border-border/70 bg-card p-8 shadow-sm">
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr,1fr]">
+          <div className="rounded-3xl bg-[var(--trust)] p-8 text-primary-foreground shadow-lg">
             <div className="flex items-center gap-3">
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--trust)] text-primary-foreground">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15">
                 <Mic className="h-5 w-5" />
               </span>
-              <div>
-                <p className="text-lg font-semibold">Talk to SAARTHI</p>
-                <p className="text-sm text-muted-foreground">Voice or text · Your language</p>
-              </div>
+              <p className="text-lg font-semibold">Talk to SAARTHI</p>
             </div>
-            <p className="mt-6 text-base text-muted-foreground">
-              We'll ask a few gentle questions about you and your family so we can find
-              the schemes that fit best. You can stop anytime.
+            <p className="mt-4 text-primary-foreground/85">
+              Ask about pensions, farmer schemes, housing, health, scholarships, or anything you need.
+              I'll listen — in your language — and update your profile as we go.
             </p>
-            <Button size="lg" className="mt-6 h-14 rounded-full px-8 text-base" disabled>
-              <Sparkles className="mr-2 h-5 w-5" />
-              Start conversation
-              <span className="ml-3 rounded-full bg-primary-foreground/15 px-2 py-0.5 text-xs">
-                Coming next
-              </span>
+            <Button asChild size="lg" variant="secondary" className="mt-6 h-12 rounded-full px-6">
+              <Link to="/assistant">Start a conversation <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
 
-          <EmptyPanel
-            icon={Sparkles}
-            title="Your benefits will appear here"
-            body="Once you share a little about yourself, your personalised feed of eligible schemes will show up right here — with a clear reason for each."
-          />
+          <div className="rounded-3xl border border-border/70 bg-card p-6">
+            <p className="text-sm uppercase tracking-widest text-muted-foreground">Profile</p>
+            <p className="mt-2 text-4xl font-semibold" style={{ fontFamily: "var(--font-display)" }}>{completeness}%</p>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-[var(--trust)] transition-all" style={{ width: `${completeness}%` }} />
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              The more we know, the sharper your recommendations get.
+            </p>
+            <Button asChild size="sm" variant="outline" className="mt-4 rounded-full">
+              <Link to="/profile">Edit profile</Link>
+            </Button>
+          </div>
         </div>
 
-        <div className="mt-6 grid gap-6 sm:grid-cols-3">
-          <QuickCard icon={FileText} title="Documents" body="Keep your Aadhaar, ration card, and income proof close." />
-          <QuickCard icon={Users} title="Family" body="Add family members so we can help each of them too." />
-          <QuickCard icon={Bell} title="Updates" body="We'll gently remind you about deadlines and renewals." />
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <StatCard label="Family" value={String(famQ.data?.length ?? 0)} icon={Users} to="/family" />
+          <StatCard label="Documents" value={String(docsQ.data?.length ?? 0)} icon={FileText} to="/documents" />
+          <StatCard label="Applications" value={String(activeApps)} icon={ClipboardList} to="/applications" />
         </div>
 
-        <p className="mt-8 text-center text-sm text-muted-foreground">
-          Prefer to explore first?{" "}
-          <Link to="/stories" className="text-[var(--trust)] hover:underline">
-            See how other citizens use SAARTHI
-          </Link>
-        </p>
+        <div className="mt-10">
+          <div className="mb-4 flex items-end justify-between">
+            <div>
+              <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-display)" }}>
+                Top matches for you
+              </h2>
+              <p className="text-sm text-muted-foreground">Personalised, explained, ready to unlock.</p>
+            </div>
+            <Button asChild variant="ghost" size="sm" className="rounded-full">
+              <Link to="/benefits">See all <ArrowRight className="ml-1 h-3 w-3" /></Link>
+            </Button>
+          </div>
+          {topRecs.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-border bg-card/60 p-10 text-center">
+              <Sparkles className="mx-auto h-6 w-6 text-[var(--saffron)]" />
+              <p className="mt-3 font-medium">Let's find your first match</p>
+              <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+                Share a little about yourself with SAARTHI and personalised schemes will show up here.
+              </p>
+              <Button asChild className="mt-4 rounded-full"><Link to="/assistant">Talk to SAARTHI</Link></Button>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {topRecs.map((r: any, i: number) => <SchemeCard key={`${r.scheme.id}-${i}`} rec={r} />)}
+            </div>
+          )}
+        </div>
       </section>
     </PageShell>
   );
 }
 
-function EmptyPanel({
-  icon: Icon,
-  title,
-  body,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  body: string;
-}) {
+function StatCard({
+  label, value, icon: Icon, to,
+}: { label: string; value: string; icon: React.ComponentType<{ className?: string }>; to: string }) {
   return (
-    <div className="flex flex-col items-start gap-4 rounded-3xl border border-dashed border-border bg-card/60 p-8">
-      <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-[var(--trust)]">
+    <Link
+      to={to}
+      className="group flex items-center justify-between rounded-2xl border border-border/70 bg-card p-5 transition hover:-translate-y-0.5 hover:shadow-md"
+    >
+      <div>
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
+        <p className="mt-1 text-3xl font-semibold" style={{ fontFamily: "var(--font-display)" }}>{value}</p>
+      </div>
+      <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-[var(--trust)] group-hover:bg-[var(--trust)] group-hover:text-primary-foreground transition-colors">
         <Icon className="h-5 w-5" />
       </span>
-      <div>
-        <p className="text-lg font-semibold">{title}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-      </div>
-    </div>
-  );
-}
-
-function QuickCard({
-  icon: Icon,
-  title,
-  body,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  body: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-border/70 bg-card p-5">
-      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-[var(--trust)]">
-        <Icon className="h-4 w-4" />
-      </span>
-      <p className="mt-3 font-semibold">{title}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-    </div>
+    </Link>
   );
 }

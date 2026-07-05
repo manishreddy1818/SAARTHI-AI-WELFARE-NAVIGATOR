@@ -14,39 +14,342 @@ export type Database = {
   }
   public: {
     Tables: {
-      profiles: {
+      applications: {
         Row: {
           created_at: string
+          id: string
+          notes: string | null
+          scheme_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          scheme_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          scheme_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_scheme_id_fkey"
+            columns: ["scheme_id"]
+            isOneToOne: false
+            referencedRelation: "schemes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          created_at: string
+          doc_type: string
+          id: string
+          label: string
+          notes: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_type: string
+          id?: string
+          label: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_type?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      family_members: {
+        Row: {
+          age: number | null
+          created_at: string
+          gender: string | null
+          has_disability: boolean
+          id: string
+          monthly_income: number | null
+          name: string
+          notes: string | null
+          occupation: string | null
+          relationship: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string
+          gender?: string | null
+          has_disability?: boolean
+          id?: string
+          monthly_income?: number | null
+          name: string
+          notes?: string | null
+          occupation?: string | null
+          relationship: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          created_at?: string
+          gender?: string | null
+          has_disability?: boolean
+          id?: string
+          monthly_income?: number | null
+          name?: string
+          notes?: string | null
+          occupation?: string | null
+          relationship?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          age: number | null
+          category: string | null
+          created_at: string
+          district: string | null
+          education: string | null
           full_name: string | null
+          gender: string | null
+          has_disability: boolean
           high_contrast: boolean
+          household_size: number | null
+          household_type: string | null
           id: string
           journey: string | null
           large_text: boolean
+          marital_status: string | null
+          monthly_income: number | null
+          occupation: string | null
+          onboarding_done: boolean
           preferred_language: string
+          profile_completeness: number
+          state: string | null
           updated_at: string
           voice_first: boolean
         }
         Insert: {
+          age?: number | null
+          category?: string | null
           created_at?: string
+          district?: string | null
+          education?: string | null
           full_name?: string | null
+          gender?: string | null
+          has_disability?: boolean
           high_contrast?: boolean
+          household_size?: number | null
+          household_type?: string | null
           id: string
           journey?: string | null
           large_text?: boolean
+          marital_status?: string | null
+          monthly_income?: number | null
+          occupation?: string | null
+          onboarding_done?: boolean
           preferred_language?: string
+          profile_completeness?: number
+          state?: string | null
           updated_at?: string
           voice_first?: boolean
         }
         Update: {
+          age?: number | null
+          category?: string | null
           created_at?: string
+          district?: string | null
+          education?: string | null
           full_name?: string | null
+          gender?: string | null
+          has_disability?: boolean
           high_contrast?: boolean
+          household_size?: number | null
+          household_type?: string | null
           id?: string
           journey?: string | null
           large_text?: boolean
+          marital_status?: string | null
+          monthly_income?: number | null
+          occupation?: string | null
+          onboarding_done?: boolean
           preferred_language?: string
+          profile_completeness?: number
+          state?: string | null
           updated_at?: string
           voice_first?: boolean
+        }
+        Relationships: []
+      }
+      saved_schemes: {
+        Row: {
+          created_at: string
+          id: string
+          scheme_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          scheme_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          scheme_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_schemes_scheme_id_fkey"
+            columns: ["scheme_id"]
+            isOneToOne: false
+            referencedRelation: "schemes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schemes: {
+        Row: {
+          benefits: Json
+          category: string
+          eligibility: Json
+          id: string
+          level: string
+          ministry: string | null
+          name: string
+          next_step: string
+          official_url: string
+          required_documents: Json
+          short_name: string | null
+          state: string | null
+          summary: string
+          tags: string[]
+          trust_note: string | null
+          updated_at: string
+        }
+        Insert: {
+          benefits?: Json
+          category: string
+          eligibility?: Json
+          id: string
+          level?: string
+          ministry?: string | null
+          name: string
+          next_step: string
+          official_url: string
+          required_documents?: Json
+          short_name?: string | null
+          state?: string | null
+          summary: string
+          tags?: string[]
+          trust_note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          benefits?: Json
+          category?: string
+          eligibility?: Json
+          id?: string
+          level?: string
+          ministry?: string | null
+          name?: string
+          next_step?: string
+          official_url?: string
+          required_documents?: Json
+          short_name?: string | null
+          state?: string | null
+          summary?: string
+          tags?: string[]
+          trust_note?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
