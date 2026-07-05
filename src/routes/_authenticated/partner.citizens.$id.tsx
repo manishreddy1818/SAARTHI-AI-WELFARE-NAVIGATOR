@@ -1,16 +1,31 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Check, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Save, Trash2 } from "lucide-react";
 import { PageShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SchemeCard } from "@/components/scheme-card";
 import { AiSummaryCard, buildAiSummary } from "@/components/ai-summary-card";
-import { getPartnerCitizen, updateFollowUp } from "@/lib/partner.functions";
+import {
+  deletePartnerCitizen,
+  getPartnerCitizen,
+  updateFollowUp,
+} from "@/lib/partner.functions";
 import { StatusBadge } from "@/components/partner-status-badge";
 import { toast } from "sonner";
 
@@ -34,9 +49,11 @@ const STAGES = [
 
 function CitizenDetail() {
   const { id } = Route.useParams();
+  const nav = useNavigate();
   const qc = useQueryClient();
   const getFn = useServerFn(getPartnerCitizen);
   const updFn = useServerFn(updateFollowUp);
+  const delFn = useServerFn(deletePartnerCitizen);
   const q = useQuery({ queryKey: ["partner-citizen", id], queryFn: () => getFn({ data: { id } }) });
 
   const [benefits, setBenefits] = useState("");
@@ -59,6 +76,18 @@ function CitizenDetail() {
       qc.invalidateQueries({ queryKey: ["partner-citizens"] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Failed to update."),
+  });
+
+  const delMut = useMutation({
+    mutationFn: () => delFn({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Citizen removed.");
+      qc.invalidateQueries({ queryKey: ["partner-stats"] });
+      qc.invalidateQueries({ queryKey: ["partner-followups"] });
+      qc.invalidateQueries({ queryKey: ["partner-citizens"] });
+      nav({ to: "/partner/citizens" });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not delete."),
   });
 
   if (q.isLoading) {
@@ -105,7 +134,37 @@ function CitizenDetail() {
                 .join(" · ")}
             </p>
           </div>
-          <StatusBadge status={c.status} />
+          <div className="flex items-center gap-3">
+            <StatusBadge status={c.status} />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" className="rounded-full text-destructive hover:text-destructive">
+                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remove {c.full_name}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This removes the citizen and all follow-up records from your workspace.
+                    This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => delMut.mutate()}
+                    disabled={delMut.isPending}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {delMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         {/* Follow-up progress */}
