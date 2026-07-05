@@ -1,11 +1,58 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const MUTE_KEY = "saarthi.tts.muted";
+const VOICE_KEY = "saarthi.tts.voice";
+const ACCENT_KEY = "saarthi.tts.accent";
+
+export const VOICE_OPTIONS = [
+  { id: "alloy", label: "Alloy — warm neutral" },
+  { id: "sage", label: "Sage — calm" },
+  { id: "verse", label: "Verse — expressive" },
+  { id: "coral", label: "Coral — bright" },
+  { id: "ash", label: "Ash — deep" },
+  { id: "shimmer", label: "Shimmer — soft" },
+] as const;
+
+export const ACCENT_OPTIONS = [
+  { id: "neutral", label: "Neutral", instructions: "" },
+  {
+    id: "indian",
+    label: "Indian English",
+    instructions:
+      "Speak with a natural, warm Indian English accent. Clear pronunciation, gentle pace, friendly tone.",
+  },
+  {
+    id: "british",
+    label: "British English",
+    instructions: "Speak with a clear, polite British English (Received Pronunciation) accent.",
+  },
+  {
+    id: "american",
+    label: "American English",
+    instructions: "Speak with a friendly, conversational American English accent.",
+  },
+  {
+    id: "hindi",
+    label: "Hindi-leaning",
+    instructions:
+      "Speak with a natural Hindi-influenced Indian accent, warm and respectful. Slightly slower pace.",
+  },
+] as const;
+
+type AccentId = (typeof ACCENT_OPTIONS)[number]["id"];
 
 export function useSpeech() {
   const [muted, setMutedState] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(MUTE_KEY) === "1";
+  });
+  const [voice, setVoiceState] = useState<string>(() => {
+    if (typeof window === "undefined") return "alloy";
+    return window.localStorage.getItem(VOICE_KEY) || "alloy";
+  });
+  const [accent, setAccentState] = useState<AccentId>(() => {
+    if (typeof window === "undefined") return "indian";
+    return ((window.localStorage.getItem(ACCENT_KEY) as AccentId) || "indian");
   });
   const [speaking, setSpeaking] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -37,10 +84,15 @@ export function useSpeech() {
       const ac = new AbortController();
       abortRef.current = ac;
       try {
+        const accentDef = ACCENT_OPTIONS.find((a) => a.id === accent);
         const res = await fetch("/api/tts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({
+            text,
+            voice,
+            instructions: accentDef?.instructions || undefined,
+          }),
           signal: ac.signal,
         });
         if (!res.ok) throw new Error(`tts ${res.status}`);
@@ -62,7 +114,7 @@ export function useSpeech() {
         setLoadingId((cur) => (cur === id ? null : cur));
       }
     },
-    [muted, stop],
+    [muted, stop, voice, accent],
   );
 
   const replay = useCallback(() => {
@@ -80,5 +132,27 @@ export function useSpeech() {
     [stop],
   );
 
-  return { speak, stop, replay, muted, setMuted, speaking, loadingId };
+  const setVoice = useCallback((v: string) => {
+    setVoiceState(v);
+    if (typeof window !== "undefined") window.localStorage.setItem(VOICE_KEY, v);
+  }, []);
+
+  const setAccent = useCallback((a: AccentId) => {
+    setAccentState(a);
+    if (typeof window !== "undefined") window.localStorage.setItem(ACCENT_KEY, a);
+  }, []);
+
+  return {
+    speak,
+    stop,
+    replay,
+    muted,
+    setMuted,
+    speaking,
+    loadingId,
+    voice,
+    setVoice,
+    accent,
+    setAccent,
+  };
 }
