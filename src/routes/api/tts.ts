@@ -8,10 +8,12 @@ export const Route = createFileRoute("/api/tts")({
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
         let text = "";
         let voice = "alloy";
+        let instructions: string | undefined;
         try {
-          const body = (await request.json()) as { text?: string; voice?: string };
+          const body = (await request.json()) as { text?: string; voice?: string; instructions?: string };
           text = (body.text ?? "").slice(0, 2500);
           if (body.voice) voice = body.voice;
+          if (body.instructions) instructions = body.instructions.slice(0, 500);
         } catch {
           return new Response("Invalid JSON", { status: 400 });
         }
@@ -27,6 +29,7 @@ export const Route = createFileRoute("/api/tts")({
             model: "openai/gpt-4o-mini-tts",
             input: text,
             voice,
+            ...(instructions ? { instructions } : {}),
             response_format: "mp3",
           }),
         });
