@@ -14,6 +14,8 @@ import { Route as RoleSelectRouteImport } from './routes/role-select'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as StoriesSlugRouteImport } from './routes/stories.$slug'
+import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as ApiSttRouteImport } from './routes/api/stt'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
@@ -23,7 +25,11 @@ import { Route as AuthenticatedCitizenRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedBenefitsRouteImport } from './routes/_authenticated/benefits'
 import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
+import { Route as AuthenticatedPartnerIndexRouteImport } from './routes/_authenticated/partner.index'
 import { Route as AuthenticatedSchemesIdRouteImport } from './routes/_authenticated/schemes.$id'
+import { Route as AuthenticatedPartnerIntakeRouteImport } from './routes/_authenticated/partner.intake'
+import { Route as AuthenticatedPartnerCitizensRouteImport } from './routes/_authenticated/partner.citizens'
+import { Route as AuthenticatedPartnerCitizensIdRouteImport } from './routes/_authenticated/partner.citizens.$id'
 
 const StoriesRoute = StoriesRouteImport.update({
   id: '/stories',
@@ -47,6 +53,16 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoriesSlugRoute = StoriesSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => StoriesRoute,
+} as any)
+const ApiTtsRoute = ApiTtsRouteImport.update({
+  id: '/api/tts',
+  path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSttRoute = ApiSttRouteImport.update({
@@ -95,43 +111,78 @@ const AuthenticatedApplicationsRoute =
     path: '/applications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPartnerIndexRoute =
+  AuthenticatedPartnerIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPartnerRoute,
+  } as any)
 const AuthenticatedSchemesIdRoute = AuthenticatedSchemesIdRouteImport.update({
   id: '/schemes/$id',
   path: '/schemes/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPartnerIntakeRoute =
+  AuthenticatedPartnerIntakeRouteImport.update({
+    id: '/intake',
+    path: '/intake',
+    getParentRoute: () => AuthenticatedPartnerRoute,
+  } as any)
+const AuthenticatedPartnerCitizensRoute =
+  AuthenticatedPartnerCitizensRouteImport.update({
+    id: '/citizens',
+    path: '/citizens',
+    getParentRoute: () => AuthenticatedPartnerRoute,
+  } as any)
+const AuthenticatedPartnerCitizensIdRoute =
+  AuthenticatedPartnerCitizensIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedPartnerCitizensRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/role-select': typeof RoleSelectRoute
-  '/stories': typeof StoriesRoute
+  '/stories': typeof StoriesRouteWithChildren
   '/applications': typeof AuthenticatedApplicationsRoute
   '/assistant': typeof AuthenticatedAssistantRoute
   '/benefits': typeof AuthenticatedBenefitsRoute
   '/citizen': typeof AuthenticatedCitizenRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/family': typeof AuthenticatedFamilyRoute
-  '/partner': typeof AuthenticatedPartnerRoute
+  '/partner': typeof AuthenticatedPartnerRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
+  '/api/tts': typeof ApiTtsRoute
+  '/stories/$slug': typeof StoriesSlugRoute
+  '/partner/citizens': typeof AuthenticatedPartnerCitizensRouteWithChildren
+  '/partner/intake': typeof AuthenticatedPartnerIntakeRoute
   '/schemes/$id': typeof AuthenticatedSchemesIdRoute
+  '/partner/': typeof AuthenticatedPartnerIndexRoute
+  '/partner/citizens/$id': typeof AuthenticatedPartnerCitizensIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/role-select': typeof RoleSelectRoute
-  '/stories': typeof StoriesRoute
+  '/stories': typeof StoriesRouteWithChildren
   '/applications': typeof AuthenticatedApplicationsRoute
   '/assistant': typeof AuthenticatedAssistantRoute
   '/benefits': typeof AuthenticatedBenefitsRoute
   '/citizen': typeof AuthenticatedCitizenRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/family': typeof AuthenticatedFamilyRoute
-  '/partner': typeof AuthenticatedPartnerRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
+  '/api/tts': typeof ApiTtsRoute
+  '/stories/$slug': typeof StoriesSlugRoute
+  '/partner/citizens': typeof AuthenticatedPartnerCitizensRouteWithChildren
+  '/partner/intake': typeof AuthenticatedPartnerIntakeRoute
   '/schemes/$id': typeof AuthenticatedSchemesIdRoute
+  '/partner': typeof AuthenticatedPartnerIndexRoute
+  '/partner/citizens/$id': typeof AuthenticatedPartnerCitizensIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -139,17 +190,23 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/role-select': typeof RoleSelectRoute
-  '/stories': typeof StoriesRoute
+  '/stories': typeof StoriesRouteWithChildren
   '/_authenticated/applications': typeof AuthenticatedApplicationsRoute
   '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/benefits': typeof AuthenticatedBenefitsRoute
   '/_authenticated/citizen': typeof AuthenticatedCitizenRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/family': typeof AuthenticatedFamilyRoute
-  '/_authenticated/partner': typeof AuthenticatedPartnerRoute
+  '/_authenticated/partner': typeof AuthenticatedPartnerRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
+  '/api/tts': typeof ApiTtsRoute
+  '/stories/$slug': typeof StoriesSlugRoute
+  '/_authenticated/partner/citizens': typeof AuthenticatedPartnerCitizensRouteWithChildren
+  '/_authenticated/partner/intake': typeof AuthenticatedPartnerIntakeRoute
   '/_authenticated/schemes/$id': typeof AuthenticatedSchemesIdRoute
+  '/_authenticated/partner/': typeof AuthenticatedPartnerIndexRoute
+  '/_authenticated/partner/citizens/$id': typeof AuthenticatedPartnerCitizensIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,7 +224,13 @@ export interface FileRouteTypes {
     | '/partner'
     | '/profile'
     | '/api/stt'
+    | '/api/tts'
+    | '/stories/$slug'
+    | '/partner/citizens'
+    | '/partner/intake'
     | '/schemes/$id'
+    | '/partner/'
+    | '/partner/citizens/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -180,10 +243,15 @@ export interface FileRouteTypes {
     | '/citizen'
     | '/documents'
     | '/family'
-    | '/partner'
     | '/profile'
     | '/api/stt'
+    | '/api/tts'
+    | '/stories/$slug'
+    | '/partner/citizens'
+    | '/partner/intake'
     | '/schemes/$id'
+    | '/partner'
+    | '/partner/citizens/$id'
   id:
     | '__root__'
     | '/'
@@ -200,7 +268,13 @@ export interface FileRouteTypes {
     | '/_authenticated/partner'
     | '/_authenticated/profile'
     | '/api/stt'
+    | '/api/tts'
+    | '/stories/$slug'
+    | '/_authenticated/partner/citizens'
+    | '/_authenticated/partner/intake'
     | '/_authenticated/schemes/$id'
+    | '/_authenticated/partner/'
+    | '/_authenticated/partner/citizens/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -208,8 +282,9 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   RoleSelectRoute: typeof RoleSelectRoute
-  StoriesRoute: typeof StoriesRoute
+  StoriesRoute: typeof StoriesRouteWithChildren
   ApiSttRoute: typeof ApiSttRoute
+  ApiTtsRoute: typeof ApiTtsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -247,6 +322,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stories/$slug': {
+      id: '/stories/$slug'
+      path: '/$slug'
+      fullPath: '/stories/$slug'
+      preLoaderRoute: typeof StoriesSlugRouteImport
+      parentRoute: typeof StoriesRoute
+    }
+    '/api/tts': {
+      id: '/api/tts'
+      path: '/api/tts'
+      fullPath: '/api/tts'
+      preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/stt': {
@@ -312,6 +401,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/partner/': {
+      id: '/_authenticated/partner/'
+      path: '/'
+      fullPath: '/partner/'
+      preLoaderRoute: typeof AuthenticatedPartnerIndexRouteImport
+      parentRoute: typeof AuthenticatedPartnerRoute
+    }
     '/_authenticated/schemes/$id': {
       id: '/_authenticated/schemes/$id'
       path: '/schemes/$id'
@@ -319,8 +415,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSchemesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/partner/intake': {
+      id: '/_authenticated/partner/intake'
+      path: '/intake'
+      fullPath: '/partner/intake'
+      preLoaderRoute: typeof AuthenticatedPartnerIntakeRouteImport
+      parentRoute: typeof AuthenticatedPartnerRoute
+    }
+    '/_authenticated/partner/citizens': {
+      id: '/_authenticated/partner/citizens'
+      path: '/citizens'
+      fullPath: '/partner/citizens'
+      preLoaderRoute: typeof AuthenticatedPartnerCitizensRouteImport
+      parentRoute: typeof AuthenticatedPartnerRoute
+    }
+    '/_authenticated/partner/citizens/$id': {
+      id: '/_authenticated/partner/citizens/$id'
+      path: '/$id'
+      fullPath: '/partner/citizens/$id'
+      preLoaderRoute: typeof AuthenticatedPartnerCitizensIdRouteImport
+      parentRoute: typeof AuthenticatedPartnerCitizensRoute
+    }
   }
 }
+
+interface AuthenticatedPartnerCitizensRouteChildren {
+  AuthenticatedPartnerCitizensIdRoute: typeof AuthenticatedPartnerCitizensIdRoute
+}
+
+const AuthenticatedPartnerCitizensRouteChildren: AuthenticatedPartnerCitizensRouteChildren =
+  {
+    AuthenticatedPartnerCitizensIdRoute: AuthenticatedPartnerCitizensIdRoute,
+  }
+
+const AuthenticatedPartnerCitizensRouteWithChildren =
+  AuthenticatedPartnerCitizensRoute._addFileChildren(
+    AuthenticatedPartnerCitizensRouteChildren,
+  )
+
+interface AuthenticatedPartnerRouteChildren {
+  AuthenticatedPartnerCitizensRoute: typeof AuthenticatedPartnerCitizensRouteWithChildren
+  AuthenticatedPartnerIntakeRoute: typeof AuthenticatedPartnerIntakeRoute
+  AuthenticatedPartnerIndexRoute: typeof AuthenticatedPartnerIndexRoute
+}
+
+const AuthenticatedPartnerRouteChildren: AuthenticatedPartnerRouteChildren = {
+  AuthenticatedPartnerCitizensRoute:
+    AuthenticatedPartnerCitizensRouteWithChildren,
+  AuthenticatedPartnerIntakeRoute: AuthenticatedPartnerIntakeRoute,
+  AuthenticatedPartnerIndexRoute: AuthenticatedPartnerIndexRoute,
+}
+
+const AuthenticatedPartnerRouteWithChildren =
+  AuthenticatedPartnerRoute._addFileChildren(AuthenticatedPartnerRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
@@ -329,7 +476,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCitizenRoute: typeof AuthenticatedCitizenRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedFamilyRoute: typeof AuthenticatedFamilyRoute
-  AuthenticatedPartnerRoute: typeof AuthenticatedPartnerRoute
+  AuthenticatedPartnerRoute: typeof AuthenticatedPartnerRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSchemesIdRoute: typeof AuthenticatedSchemesIdRoute
 }
@@ -341,7 +488,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCitizenRoute: AuthenticatedCitizenRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedFamilyRoute: AuthenticatedFamilyRoute,
-  AuthenticatedPartnerRoute: AuthenticatedPartnerRoute,
+  AuthenticatedPartnerRoute: AuthenticatedPartnerRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSchemesIdRoute: AuthenticatedSchemesIdRoute,
 }
@@ -349,13 +496,25 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface StoriesRouteChildren {
+  StoriesSlugRoute: typeof StoriesSlugRoute
+}
+
+const StoriesRouteChildren: StoriesRouteChildren = {
+  StoriesSlugRoute: StoriesSlugRoute,
+}
+
+const StoriesRouteWithChildren =
+  StoriesRoute._addFileChildren(StoriesRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   RoleSelectRoute: RoleSelectRoute,
-  StoriesRoute: StoriesRoute,
+  StoriesRoute: StoriesRouteWithChildren,
   ApiSttRoute: ApiSttRoute,
+  ApiTtsRoute: ApiTtsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

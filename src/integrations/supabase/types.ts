@@ -189,6 +189,143 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_citizen_family: {
+        Row: {
+          age: number | null
+          citizen_id: string
+          created_at: string
+          gender: string | null
+          has_disability: boolean | null
+          id: string
+          monthly_income: number | null
+          name: string
+          notes: string | null
+          occupation: string | null
+          partner_id: string
+          relationship: string
+        }
+        Insert: {
+          age?: number | null
+          citizen_id: string
+          created_at?: string
+          gender?: string | null
+          has_disability?: boolean | null
+          id?: string
+          monthly_income?: number | null
+          name: string
+          notes?: string | null
+          occupation?: string | null
+          partner_id: string
+          relationship: string
+        }
+        Update: {
+          age?: number | null
+          citizen_id?: string
+          created_at?: string
+          gender?: string | null
+          has_disability?: boolean | null
+          id?: string
+          monthly_income?: number | null
+          name?: string
+          notes?: string | null
+          occupation?: string | null
+          partner_id?: string
+          relationship?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_citizen_family_citizen_id_fkey"
+            columns: ["citizen_id"]
+            isOneToOne: false
+            referencedRelation: "partner_citizens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_citizens: {
+        Row: {
+          age: number | null
+          applications_completed: number
+          applications_started: number
+          category: string | null
+          created_at: string
+          district: string | null
+          education: string | null
+          estimated_benefits: number
+          full_name: string
+          gender: string | null
+          has_disability: boolean | null
+          household_size: number | null
+          household_type: string | null
+          id: string
+          last_activity_at: string
+          marital_status: string | null
+          mobile: string | null
+          monthly_income: number | null
+          notes: string | null
+          occupation: string | null
+          partner_id: string
+          preferred_language: string | null
+          state: string | null
+          status: Database["public"]["Enums"]["follow_up_status"]
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          applications_completed?: number
+          applications_started?: number
+          category?: string | null
+          created_at?: string
+          district?: string | null
+          education?: string | null
+          estimated_benefits?: number
+          full_name: string
+          gender?: string | null
+          has_disability?: boolean | null
+          household_size?: number | null
+          household_type?: string | null
+          id?: string
+          last_activity_at?: string
+          marital_status?: string | null
+          mobile?: string | null
+          monthly_income?: number | null
+          notes?: string | null
+          occupation?: string | null
+          partner_id: string
+          preferred_language?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["follow_up_status"]
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          applications_completed?: number
+          applications_started?: number
+          category?: string | null
+          created_at?: string
+          district?: string | null
+          education?: string | null
+          estimated_benefits?: number
+          full_name?: string
+          gender?: string | null
+          has_disability?: boolean | null
+          household_size?: number | null
+          household_type?: string | null
+          id?: string
+          last_activity_at?: string
+          marital_status?: string | null
+          mobile?: string | null
+          monthly_income?: number | null
+          notes?: string | null
+          occupation?: string | null
+          partner_id?: string
+          preferred_language?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["follow_up_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
@@ -389,6 +526,12 @@ export type Database = {
     }
     Enums: {
       app_role: "citizen" | "partner" | "admin"
+      follow_up_status:
+        | "need_documents"
+        | "application_submitted"
+        | "waiting_approval"
+        | "benefit_received"
+        | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -517,6 +660,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["citizen", "partner", "admin"],
+      follow_up_status: [
+        "need_documents",
+        "application_submitted",
+        "waiting_approval",
+        "benefit_received",
+        "completed",
+      ],
     },
   },
 } as const
