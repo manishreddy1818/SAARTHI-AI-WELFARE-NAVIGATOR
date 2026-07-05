@@ -34,7 +34,7 @@ export type Scheme = {
   level: string;
   summary: string;
   benefits: string[];
-  eligibility: Record<string, unknown>;
+  eligibility: Record<string, any>;
   required_documents: string[];
   next_step: string;
   official_url: string;
