@@ -57,7 +57,7 @@ export const updateProfile = createServerFn({ method: "POST" })
 
     const { error } = await context.supabase
       .from("profiles")
-      .update(cleaned)
+      .update(cleaned as any)
       .eq("id", context.userId);
     if (error) throw error;
     return { ok: true, completeness };
@@ -349,7 +349,7 @@ export const sendMessage = createServerFn({ method: "POST" })
 
     // 4. Call model
     let reply = "";
-    let profile_updates: Record<string, unknown> = {};
+    let profile_updates: Record<string, any> = {};
     let suggested_prompts: string[] = [];
     try {
       const parsed = await chatJSON<{
@@ -376,17 +376,17 @@ export const sendMessage = createServerFn({ method: "POST" })
     });
 
     // 6. Apply profile updates if any
-    let appliedUpdates: Record<string, unknown> = {};
+    let appliedUpdates: Record<string, any> = {};
     if (profile_updates && typeof profile_updates === "object") {
       const safe = profilePatch.safeParse(profile_updates);
       if (safe.success) {
-        const cleaned: Record<string, unknown> = {};
+        const cleaned: Record<string, any> = {};
         for (const [k, v] of Object.entries(safe.data)) if (v !== null && v !== undefined) cleaned[k] = v;
         if (Object.keys(cleaned).length) {
           const merged = { ...(profile ?? {}), ...cleaned } as ProfileFacts;
           cleaned.profile_completeness = profileCompleteness(merged);
           cleaned.onboarding_done = (cleaned.profile_completeness as number) >= 50;
-          await context.supabase.from("profiles").update(cleaned).eq("id", context.userId);
+          await context.supabase.from("profiles").update(cleaned as any).eq("id", context.userId);
           appliedUpdates = cleaned;
         }
       }
