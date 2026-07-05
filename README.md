@@ -1,0 +1,1 @@
+"SAARTHI is an AI-powered Welfare Navigator that combines conversational AI, deterministic eligibility reasoning, and explainable recommendations to help citizens discover and access government welfare schemes. We also empower Welfare Partners such as NGOs and volunteers to assist digitally excluded citizens through the same platform."
