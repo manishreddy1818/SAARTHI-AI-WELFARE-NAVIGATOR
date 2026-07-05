@@ -432,3 +432,21 @@ export const getConversation = createServerFn({ method: "POST" })
     if (error) throw error;
     return messages ?? [];
   });
+
+export const deleteConversation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => z.object({ id: z.string().uuid() }).parse(v))
+  .handler(async ({ data, context }) => {
+    await context.supabase
+      .from("chat_messages")
+      .delete()
+      .eq("conversation_id", data.id)
+      .eq("user_id", context.userId);
+    const { error } = await context.supabase
+      .from("conversations")
+      .delete()
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
+    if (error) throw error;
+    return { ok: true };
+  });
