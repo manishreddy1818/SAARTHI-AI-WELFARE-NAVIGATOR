@@ -1,241 +1,353 @@
-# SAARTHI — Product Blueprint (Discovery Phase)
+# SAARTHI — Design System & Screen Inventory (Discovery Phase II)
 
-No code will be written in this phase. This blueprint is the single source of truth that every future design, engineering, and AI decision must reference.
+Discovery only. No code, components, or pages in this phase. This document builds on the approved Product Blueprint (`.lovable/plan.md`) and becomes the design contract every screen must honor.
 
----
-
-## 1. Product Vision
-
-SAARTHI is an **AI Welfare Navigator** — a conversational, multilingual, voice-first assistant that ensures no eligible citizen in India misses a government benefit because of awareness gaps, language barriers, digital illiteracy, or bureaucratic complexity.
-
-It behaves less like a portal and more like a **trusted welfare officer sitting next to the user**, who listens, understands the family's situation, and quietly does the hard work of matching them to schemes, explaining eligibility in plain language, and guiding them through applications end-to-end.
-
-North-star sentence: *"Tell SAARTHI about your family once, and never miss a benefit you deserve again."*
+Design north-star: **Apple Human Interface × Perplexity AI × Linear × ChatGPT Voice Mode**. Never a government portal.
 
 ---
 
-## 2. Problem Statement
+## PART A — DESIGN SYSTEM
 
-- India runs 950+ central and state welfare schemes; the average citizen knows fewer than 5.
-- Discovery is fragmented across dozens of portals, PDFs, and regional-language notifications.
-- Eligibility rules are legalistic, conditional, and change frequently.
-- Elderly, rural, and low-literacy users cannot navigate form-heavy government UIs.
-- NGOs and village volunteers do this matching manually, at massive time cost.
-- Officers lack tooling to proactively surface benefits to their constituents.
+### A1. Brand Feel
+- Warm, calm, confident. A trusted welfare officer, not a bureaucrat.
+- Voice-first, not form-first.
+- Generous whitespace. Big type. One clear action per screen.
 
-Consequence: crores of rupees in entitlements go unclaimed every year by the people who need them most.
+### A2. Color System (semantic tokens, oklch)
+
+Light mode is the default; dark mode is a first-class peer.
+
+| Token | Purpose | Direction |
+|---|---|---|
+| `--background` | App canvas | Warm off-white ivory (light) / deep ink navy (dark) |
+| `--foreground` | Primary text | Near-black warm charcoal / warm off-white |
+| `--surface` | Cards, sheets | 1 step lighter than background with subtle warmth |
+| `--surface-elevated` | Modals, popovers | Slight tint + soft shadow |
+| `--primary` | SAARTHI signature | Deep saffron-indigo blend — warm, Indian-rooted, non-partisan |
+| `--primary-foreground` | Text on primary | Ivory |
+| `--primary-glow` | Voice orb halo | Higher-chroma variant of primary |
+| `--accent` | Highlights, focus | Warm gold (trust, dignity) |
+| `--success` | Eligible / Approved | Calm sage green |
+| `--warning` | Missing docs / Renewals | Warm amber |
+| `--destructive` | Rejected / Errors | Muted terracotta (never harsh red) |
+| `--muted` / `--muted-foreground` | Secondary text | Warm neutral grays |
+| `--border` | Hairlines | Very low contrast |
+| `--ring` | Focus | 2px accent, always visible |
+
+Gradients (as tokens, not one-off inline):
+- `--gradient-primary` — hero backgrounds, voice orb
+- `--gradient-aurora` — subtle multi-hue wash for splash + AI screens
+- `--gradient-surface` — card hover lift
+
+Shadows:
+- `--shadow-soft` — resting card
+- `--shadow-lift` — hover / active card
+- `--shadow-orb` — voice orb glow (color-mixed from `--primary`)
+
+Rule: **no hardcoded colors in components**. Every color flows through `src/styles.css` tokens.
+
+### A3. Typography
+
+Two-family system, both with excellent Devanagari + Latin coverage:
+- **Display / Headings:** a modern humanist sans (candidates: *Inter Display*, *General Sans*, *Sora*) — for confident, quiet headlines.
+- **Body / UI:** a highly-readable neutral sans (candidates: *Inter*, *Manrope*) — for long-form scheme text.
+- **Indic pairing:** *Noto Sans Devanagari* / *Noto Sans Tamil* / etc. loaded per active language.
+
+Scale (mobile-first, generous):
+- Display XL 48 / 56 — Splash, hero
+- Display L 36 / 44 — Section headers
+- Title 28 / 36 — Screen titles
+- Heading 22 / 30 — Card titles
+- Body L 18 / 28 — Default body (larger than typical for accessibility)
+- Body M 16 / 24 — Secondary text
+- Caption 14 / 20 — Metadata
+- Micro 12 / 16 — Reserved (never for content)
+
+Rules: minimum body size 16px, minimum line-height 1.5, max line-length 68ch, headings never ALL CAPS except tiny eyebrow labels.
+
+### A4. Spacing, Radius, Elevation
+- **Spacing scale:** 4, 8, 12, 16, 20, 24, 32, 40, 56, 72, 96. Screens breathe.
+- **Radius:** `sm 10 / md 14 / lg 20 / xl 28 / 2xl 36 / full`. Cards default to `xl`. Voice orb `full`.
+- **Elevation:** three tiers only — resting, hover, floating (modal/sheet). Never harsh drop shadows.
+- **Glassmorphism:** used sparingly on the AI Assistant surface and the persistent voice button — `backdrop-blur` + `--surface` at 70% + hairline border.
+
+### A5. Iconography & Imagery
+- Line-icon set, 1.5px stroke, rounded caps. Consistent optical size.
+- Illustrations: warm, human, culturally-inclusive; avoid clip-art stock. Prefer abstract shapes + real photography of people.
+- No flags, no emblems, no government seals — reinforces "not a sarkari site."
+
+### A6. Motion Language
+- Curve: `cubic-bezier(0.22, 1, 0.36, 1)` (calm ease-out) for entrances; symmetric for exits.
+- Durations: 150ms micro, 240ms standard, 420ms hero.
+- Signature motions:
+  - **Voice pulse** — orb breathes at 1.2s cycle when listening, faster + amplitude-reactive when speaking.
+  - **AI thinking** — three dots morph into a shimmer bar; never a spinner.
+  - **Card hover** — 2px lift + shadow deepen, no scale-up above 1.02.
+  - **Route transitions** — soft cross-fade + 8px vertical slide.
+  - **Skeletons** — shimmer, not spinners; match final layout exactly.
+- Respect `prefers-reduced-motion` globally.
+
+### A7. Component Primitives (design contract — implementation later)
+Buttons (Primary / Secondary / Ghost / Destructive / Icon / Voice), Input, Textarea, Select, Combobox, Checkbox, Radio, Switch, Slider, Chip / Tag, Badge (Eligible/Pending/Approved/Rejected/Renewal), Card, ListItem, SchemeCard, FamilyMemberCard, DocumentCard, ApplicationCard, Tabs, Segmented Control, Modal, Sheet (bottom, mobile), Drawer, Toast, Tooltip, Popover, Progress (linear + step), Skeleton, EmptyState, Avatar, LanguagePicker, VoiceOrb (S/M/L), AI Message Bubble (user / assistant / system), ConfidenceMeter, EligibilityTrace, StepIndicator, BottomNav, Sidebar (partner), Header.
+
+Every interactive element: min 44×44px target, visible focus ring, keyboard accessible, screen-reader labeled.
+
+### A8. Voice UX Primitives
+- **Voice Orb** — the product's mascot. Four states: idle, listening, thinking, speaking. Each state has a distinct halo + motion signature but the same silhouette.
+- **Push-to-talk** — persistent floating button; long-press to speak, release to send; barge-in supported.
+- **Transcript rail** — every voice turn produces text; text is always the source of truth.
+- **Language chip** — always visible near the orb; one tap to switch.
+
+### A9. Accessibility Contract
+- WCAG 2.2 AA minimum, AAA for body text contrast.
+- Every icon-only control has `aria-label`.
+- Every image has meaningful `alt` (or `alt=""` if decorative).
+- Landmarks: single `<main>`, proper heading order, skip-link on every page.
+- Full keyboard operability, visible focus, no keyboard traps.
+- Mobile viewport uses `dvh`, tap targets ≥ 44px.
+- "Simple Language Mode" toggle globally reduces reading grade.
 
 ---
 
-## 3. Target Users (Primary → Secondary)
+## PART B — INFORMATION ARCHITECTURE & NAVIGATION
 
-1. **Citizens** — individual beneficiaries, often mobile-first, often low-literacy.
-2. **Families** — one digitally-capable member managing benefits for parents, children, siblings.
-3. **NGOs** — field workers running welfare drives, need bulk screening.
-4. **Welfare Partners** — CSR arms, cooperatives, SHGs distributing entitlements.
-5. **Village Volunteers / ASHA / Anganwadi workers** — trusted intermediaries.
-6. **Government Welfare Officers** — BDOs, district officers monitoring uptake.
-
----
-
-## 4. User Personas
-
-**Persona 1 — Ramesh, 62, retired farmer, Bihar**
-Speaks Bhojpuri/Hindi, WhatsApp-literate, cannot fill forms. Wants pension, ration, health cover. Needs voice, big text, no jargon.
-
-**Persona 2 — Priya, 29, daughter in Bengaluru managing parents in Jaipur**
-English/Hindi, high digital literacy. Wants a family dashboard, reminders, document vault, application tracking on behalf of parents.
-
-**Persona 3 — Anjali, 34, NGO field coordinator, Odisha**
-Screens 40 families/week. Needs a "batch intake" mode, exportable eligibility reports, offline-tolerant flows.
-
-**Persona 4 — Suresh, 45, Village Volunteer (Panchayat)**
-Trusted by neighbours. Needs a lightweight assisted mode where he speaks on a citizen's behalf and prints/shares a benefits summary.
-
-**Persona 5 — Ms. Kavita, District Welfare Officer**
-Needs an aggregate view: coverage gaps, top unclaimed schemes in her block, ability to push targeted outreach.
-
----
-
-## 5. Complete User Journey (Citizen — primary flow)
+### B1. Route Map (flat, TanStack Start conventions)
 
 ```text
-Landing
-   │  "Namaste. Main SAARTHI hoon. Aap kis bhasha mein baat karenge?"
-   ▼
-Language + Voice/Text choice
-   ▼
-Conversational Intake (not a form)
-   • Age, gender, state, district
-   • Occupation, income band
-   • Family composition
-   • Disability / health / caste category (opt-in, explained why)
-   • Documents already available (Aadhaar, ration card, etc.)
-   ▼
-AI Reasoning (invisible to user)
-   • Match against scheme knowledge base
-   • Rank by (eligibility confidence × benefit value × ease of claim)
-   ▼
-Personalized Benefits Feed
-   • "You likely qualify for 7 schemes worth ~₹48,000/year"
-   • Each card: plain-language what/why/how-much/next-step
-   ▼
-Deep-dive on a scheme
-   • Eligibility explained conversationally
-   • Documents checklist
-   • "Apply with SAARTHI" — guided step-by-step
-   • "Talk to a volunteer" — human handoff
-   ▼
-Application Companion
-   • Document vault, prefilled data, status tracking, reminders
-   ▼
-Post-claim
-   • Renewal alerts, new-scheme alerts, family re-screening
+/                         Splash Experience (first visit) → Landing
+/welcome                  Landing (marketing home)
+/journey                  Choose Your Journey
+/auth/login               Login
+/auth/signup              Signup
+/auth/forgot              Forgot password
+/auth/language            Language + accessibility setup
+/app                      Citizen shell (bottom nav)
+  /app                    Citizen Dashboard (home)
+  /app/assistant          AI Assistant
+  /app/benefits           Benefits Feed
+  /app/benefits/$id       Scheme Details
+  /app/family             Family Dashboard
+  /app/family/$memberId   Member detail
+  /app/documents          Documents
+  /app/applications       Applications
+  /app/applications/$id   Application detail
+  /app/profile            Profile
+/stories                  Citizen Journey Gallery (public)
+/stories/$slug            Story deep-dive (interactive demo)
+/partner                  Welfare Partner shell (sidebar)
+  /partner                Partner Dashboard
+  /partner/citizens       Citizens list
+  /partner/intake         Voice Intake
+  /partner/reports        Reports
+  /partner/impact         Impact Dashboard
+  /partner/profile        Profile
 ```
 
-Parallel journeys for **Family Manager**, **NGO Batch Intake**, **Volunteer Assisted Mode**, and **Officer Dashboard** branch from the same intake engine.
+### B2. Navigation Patterns
+
+**Citizen (mobile-first):** Bottom nav — *Home · Benefits · Family · Documents · Profile*. Persistent floating **Voice Orb** above the nav on every screen.
+
+**Partner (desktop-first):** Left sidebar — *Dashboard · Citizens · Voice Intake · Reports · Impact · Profile*. Top bar with global search + language.
+
+**Public (marketing):** Slim top nav — logo, *Stories*, *For Partners*, *Sign in*, *Start AI* (primary).
+
+Role switcher lives in Profile for users who hold multiple roles.
 
 ---
 
-## 6. Information Architecture
+## PART C — COMPLETE SCREEN INVENTORY
 
-Top-level spaces (not necessarily nav items — some are contextual):
+Each screen specifies: **Purpose · Layout · Components · Content · Primary Action · Secondary Actions · Empty/Loading/Error states · Accessibility notes · Motion notes**.
 
-- **Home / Conversation** — the primary surface; always one tap away.
-- **My Benefits** — personalized feed, categorized (Active, Eligible, In Progress, Renewals).
-- **Scheme Library** — browsable, searchable, filterable (fallback discovery).
-- **Family** — profiles for household members, per-person benefits view.
-- **Documents** — secure vault, reusable across applications.
-- **Applications** — tracker with statuses, next actions, reminders.
-- **Help & Human Support** — volunteer chat, NGO connect, call-back request.
-- **Profile & Language** — preferences, accessibility, consent controls.
+### Screen 1 — Splash Experience  `/`
+- **Purpose:** Create emotional connection in ≤ 8 seconds. Introduce SAARTHI's soul before its UI.
+- **Layout:** Full-bleed aurora gradient; centered stage; no chrome.
+- **Sequence (auto-advancing, skippable):**
+  1. Animated logomark draws in (0–1.2s).
+  2. Line 1: *"Crores of citizens miss benefits they deserve."* (fade up).
+  3. Line 2: *"Not anymore."*
+  4. SAARTHI wordmark + tagline: *"Your AI Welfare Navigator."*
+  5. Voice greeting (autoplay only if user gestured; otherwise button): *"Namaste. Main SAARTHI hoon."*
+  6. Primary CTA: **Get Started** → `/journey`.
+- **Components:** Logomark, GradientBackdrop, VoiceOrb (idle → speaking), TextRevealSequence, PrimaryButton, SkipLink.
+- **States:** first-visit only (localStorage flag); returning users go straight to `/welcome` or `/app`.
+- **Motion:** slow, cinematic; single skip control; respects reduced-motion (static poster).
+- **A11y:** Skip button focused first; captions for the voice greeting; screen reader reads the full sequence at once.
 
-Role-scoped spaces:
-- **NGO Workspace** — beneficiaries, campaigns, exports.
-- **Volunteer Mode** — assisted intake, print/share summary.
-- **Officer Console** — coverage analytics, outreach.
+### Screen 2 — Landing Page  `/welcome`
+- **Purpose:** Convert curious visitors into first-time citizens/partners.
+- **Sections (top-to-bottom):**
+  1. **Hero** — Big claim, subhead, Primary **Start AI** + Secondary **Explore Citizen Stories**. Ambient voice orb.
+  2. **Problem** — Three stat cards: schemes count, avg unclaimed benefit, awareness gap.
+  3. **Solution** — SAARTHI in one sentence + product screenshot mock.
+  4. **Features** — Bento grid: Voice-first · Multilingual · Family mode · Document vault · Guided applications · Volunteer-assist.
+  5. **How It Works** — 4-step narrative (Talk → Match → Explain → Apply).
+  6. **AI Benefits** — Why AI beats forms (dignity, speed, personalization, explainability).
+  7. **Citizen Stories** — Carousel of 5 personas from the Journey Gallery.
+  8. **Testimonials** — NGOs, volunteers, officers.
+  9. **FAQ** — Data privacy, cost (free), languages, offline, official-source guarantee.
+  10. **Footer** — Language switch, Partners CTA, contact, privacy, T&C, credits.
+- **Primary Action:** Start AI (persistent in header after scroll).
+- **A11y:** Semantic sections with landmarks; heading order strict.
+
+### Screen 3 — Choose Your Journey  `/journey`
+- **Purpose:** Route the user to the right product surface.
+- **Layout:** Three oversized cards on desktop, stacked on mobile.
+  - **Citizen** — "Find benefits for me or my family." → `/auth/signup?role=citizen`
+  - **Welfare Partner** — "Screen citizens, run campaigns, measure impact." → `/auth/signup?role=partner`
+  - **Explore Citizen Stories** — "See SAARTHI in action, no signup." → `/stories`
+- **Components:** JourneyCard (icon, title, one-line, sample tags, CTA), LanguageChip in header.
+- **Motion:** Cards lift + halo on hover; enter with staggered fade.
+
+### Screen 4 — Authentication  `/auth/*`
+- **Purpose:** Frictionless entry. OTP-first; passwords are secondary.
+- **Screens:**
+  - **Login** — Phone/email + OTP; "Continue with Google" (optional).
+  - **Signup** — Same as login + name, role (prefilled from `?role`), consent checkbox.
+  - **Forgot Password** — Only for email accounts.
+  - **Language Selection** — Big language chips (native script rendered natively); default from device.
+  - **Accessibility Options** — Text size (S/M/L/XL), high-contrast toggle, voice-first toggle, reduce motion.
+- **Layout:** Single centered card, generous padding, one primary action per step.
+- **A11y:** Autofocus first input; OTP fields as one accessible group; error text tied via `aria-describedby`.
+
+### Screen 5 — Citizen Dashboard  `/app`
+- **Purpose:** "Where do I stand today?" — a calm, non-overwhelming home.
+- **Layout (mobile-first, single column):**
+  1. **Greeting header** — "Namaste, Ramesh ji" + weather-of-benefits sentence: "3 new schemes match you this month."
+  2. **Estimated Benefits card** — headline number ("₹48,200/year unlocked") + trend chip.
+  3. **Recommended Actions** — 2–3 next best steps (e.g. "Upload Aadhaar to unlock 4 schemes").
+  4. **Applications strip** — horizontal cards of in-flight applications with status.
+  5. **Family Members strip** — avatars + per-person eligible count.
+  6. **Recent Activity** — timeline of AI conversations, saved schemes, doc uploads.
+  7. **Quick AI button** (large) + persistent Voice Orb.
+- **Primary Action:** Talk to SAARTHI (opens `/app/assistant`).
+- **Empty state:** first-time users see a friendly intake CTA instead of the strips.
+
+### Screen 6 — AI Assistant  `/app/assistant`
+- **Purpose:** The heart of the product. A calm, focused conversation surface.
+- **Layout:** Full-height, single-column, minimal chrome.
+  - **Top bar:** back, language chip, "New conversation".
+  - **Center stage:** large **Voice Orb** with state animation and live captions.
+  - **Transcript rail:** message bubbles above/below orb; auto-scroll.
+  - **Suggested prompts:** 3 chips ("Am I eligible for pension?", "Schemes for my daughter", "Explain PMAY").
+  - **Composer:** push-to-talk button (primary), text input (secondary), attach doc, stop-speaking.
+- **States of Orb:** idle (breathe) · listening (amplitude ring) · thinking (shimmer bar) · speaking (waveform halo).
+- **Behaviors:** barge-in, live transcript, source citations under assistant messages, "Why this answer?" reveals eligibility trace, save-to-benefits action on any scheme mention.
+- **Empty:** greeting + suggested prompts.
+- **Error:** "I didn't catch that" with retry + switch-to-text.
+- **A11y:** captions on by default; full keyboard alternative for every voice action.
+
+### Screen 7 — Benefits Feed  `/app/benefits`
+- **Purpose:** Personalized, ranked list of schemes.
+- **Layout:** Filter bar (All · Eligible · In Progress · Saved · Renewals) + list of **SchemeCard**s.
+- **SchemeCard content:** Scheme name, one-line summary, **Priority** badge, **Estimated Benefit** (₹/year or one-time), **Eligibility Status** (Likely / Possibly / Check with officer), **Confidence meter**, actions: **Apply · Save · Learn More**.
+- **Sort/Filter:** by benefit value, ease of claim, renewal urgency, category.
+- **Empty:** intake CTA. **Loading:** shimmer cards. **Error:** retry + offline notice.
+
+### Screen 8 — Scheme Details  `/app/benefits/$id`
+- **Purpose:** Deep, trustworthy, plain-language explanation of one scheme.
+- **Sections:**
+  1. Hero — Name, category, benefit headline, eligibility badge, confidence.
+  2. **Description** — 3rd-grade language.
+  3. **Why you're eligible** — bullet list mapped to profile facts.
+  4. **Eligibility rules** — expandable full rule text with source link.
+  5. **Required documents** — checklist tied to Documents vault (green tick if uploaded).
+  6. **Application steps** — numbered stepper with estimated time each.
+  7. **Timeline** — expected processing time, past user averages.
+  8. **Official link** — clearly labeled outbound.
+  9. Sticky action bar: **Apply with SAARTHI (primary) · Save · Ask AI**.
+- **A11y:** eligibility trace fully keyboard-reachable; outbound links marked.
+
+### Screen 9 — Family Dashboard  `/app/family`
+- **Purpose:** Manage entitlements for the whole household.
+- **Layout:** Grid of **FamilyMemberCard**s + "Add member" CTA.
+- **Each card:** avatar, name, relationship, age, eligible-count, in-progress-count, tap → member detail.
+- **Member detail** (`/app/family/$memberId`): profile summary, eligible schemes, active applications, uploaded documents, progress bar toward "fully covered."
+- **Empty:** guided prompt to add first member (voice or form).
+
+### Screen 10 — Documents  `/app/documents`
+- **Purpose:** Reusable vault; kills the biggest friction in applications.
+- **Layout:** Two tabs — **My Documents** · **Checklist**.
+- **My Documents:** grid of DocumentCards (thumbnail, name, expiry chip, linked-to badge).
+- **Checklist:** categories (Identity, Address, Income, Caste, Disability, Bank) with per-item status: uploaded / missing / expiring.
+- **Actions:** Upload (camera / gallery / DigiLocker), Download, Delete, Share to application.
+- **Suggestions:** "Upload PAN to unlock 3 more schemes."
+- **A11y:** OCR'd docs get alt text; upload is keyboard + voice accessible.
+
+### Screen 11 — Applications  `/app/applications`
+- **Purpose:** Track everything in flight.
+- **Layout:** Segmented control (All · Pending · Submitted · Approved · Rejected) + list of **ApplicationCard**s.
+- **Card:** scheme name, status badge, last update, next action CTA.
+- **Detail** (`/app/applications/$id`): step timeline with completed / current / upcoming states, documents attached, officer contact if available, "Talk to a volunteer" fallback.
+- **Empty:** "No applications yet — let's find your benefits."
+
+### Screen 12 — Citizen Journey Gallery  `/stories` + `/stories/$slug`
+- **Purpose:** Show, don't tell. A public showcase of SAARTHI in action.
+- **Gallery layout:** Bento of 5 preloaded personas — **Senior Citizen · Farmer · Student · Woman Entrepreneur · Disabled Citizen**.
+- **Story layout:** interactive replayable conversation with the AI assistant (scripted, not live). Play/pause, step-through, "Try this yourself" CTA that seeds `/app/assistant` with the same profile.
+- **Empty/Error:** static transcript fallback if audio can't play.
+
+### Screen 13 — Welfare Partner Dashboard  `/partner`
+- **Purpose:** Operational cockpit for NGO/partner staff.
+- **Layout (desktop):** Sidebar + top bar + workspace.
+- **Widgets:**
+  - KPI row: Citizens Assisted · Applications · Follow-ups Due · Impact (₹ unlocked).
+  - **Quick Intake** button (opens Voice Intake).
+  - Recent citizens table with filter/search.
+  - Follow-ups queue with due-today highlight.
+  - Reports shortcut.
+
+### Screen 14 — Impact Dashboard  `/partner/impact`
+- **Purpose:** Prove the outcome; export for funders/government.
+- **Widgets:** Citizens Helped · Benefits Unlocked (₹) · Applications Submitted · Approval Rate · Family Coverage %. Trend charts (weekly/monthly), geography breakdown, top schemes, unclaimed opportunities.
+- **Actions:** Export CSV/PDF, share link, date range.
+
+### Screen 15 — Profile  `/app/profile` and `/partner/profile`
+- **Purpose:** Personal control center.
+- **Sections:** Personal Information · Language · Accessibility (text size, contrast, reduce motion, simple-language mode) · Voice Settings (persona voice, autoplay, captions) · Notifications (renewals, new-scheme alerts, family) · Role Switch · Data & Consent · Logout.
+- **A11y:** every toggle has a clear label + short helper text.
+
+### Screen 16 — Voice Intake (Partner)  `/partner/intake`
+- **Purpose:** Volunteer speaks on behalf of a citizen; SAARTHI captures a Citizen Profile in one session.
+- **Layout:** Split — left: live transcript + extracted profile fields updating in real time; right: Voice Orb + citizen consent chip + save/print buttons.
+- **Outcome:** creates a citizen record + a shareable benefits summary (WhatsApp / PDF / print).
 
 ---
 
-## 7. Feature Hierarchy
+## PART D — CROSS-CUTTING PATTERNS
 
-**Tier 0 — Non-negotiable (MVP)**
-- Multilingual conversational intake (voice + text)
-- AI scheme matching + plain-language explanations
-- Personalized Benefits Feed
-- Scheme deep-dive with eligibility + document checklist
-- Basic profile persistence
+### D1. States (mandatory for every screen)
+- **Loading:** skeletons matching final layout, never spinners.
+- **Empty:** friendly illustration + one clear next step.
+- **Error:** plain-language message + retry + human-help escape hatch.
+- **Offline:** banner + read-only cached view where possible.
 
-**Tier 1 — Core value (v1)**
-- Family profiles
-- Document vault
-- Application companion (guided steps)
-- Reminders and renewal alerts
-- Volunteer assisted mode
+### D2. Feedback
+- Toasts for background actions; inline confirmations for destructive actions; haptic-like micro-motion on success.
 
-**Tier 2 — Trust & scale (v1.5)**
-- NGO workspace with batch intake and exports
-- Human handoff / call-back
-- Offline-tolerant intake (sync later)
+### D3. Language & Simplicity
+- Every string authored in English then translated; no idioms that break in translation.
+- Simple Language Mode strips jargon and shortens sentences globally.
 
-**Tier 3 — Ecosystem (v2)**
-- Officer analytics console
-- Partner API (CSR / cooperatives)
-- Direct application submission where government APIs allow
-- Proactive outreach ("3 new schemes match your family")
+### D4. Privacy & Trust
+- First-time sensitive prompt (caste, disability, income) is always explained: *"Why we ask · How we use it · You can skip."*
+- "Sources" chip on every AI answer.
+- Data & Consent screen: what we store, export my data, delete my data.
 
 ---
 
-## 8. AI Strategy
+## PART E — DELIVERY CHECKLIST (for next phase)
 
-**Core intelligences**
-1. **Intake Agent** — conversational, empathetic, culturally-aware; extracts a structured Citizen Profile from free-form speech.
-2. **Eligibility Engine** — deterministic rules layer on top of a curated Scheme Knowledge Base; AI is used for *interpretation and explanation*, not for the final eligibility verdict (auditable).
-3. **Explainer Agent** — turns legalistic scheme text into 3rd-grade-reading-level answers in the user's language.
-4. **Guidance Agent** — walks the user through application steps, document prep, and submission.
-5. **Proactive Agent** — background matcher; notifies when new schemes fit or renewals are due.
-
-**Guardrails**
-- Every eligibility claim shows a "Why do you qualify?" trace linking to the source rule.
-- Never fabricate a scheme; retrieval-grounded only.
-- Sensitive fields (caste, disability, income) are opt-in with clear purpose.
-- Confidence badges: *Likely eligible / Possibly eligible / Check with officer.*
-
-**Knowledge base**
-- Curated, versioned scheme corpus (central + state), tagged by eligibility dimensions.
-- Human-in-the-loop review workflow for updates.
-
----
-
-## 9. Voice Strategy
-
-- Voice is a **first-class input and output**, not an accessibility add-on.
-- Push-to-talk on every screen; barge-in supported.
-- Supports major Indian languages + key dialects on day one (Hindi, English, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Odia). Roadmap for tribal languages.
-- Voice replies are short, warm, and use local idioms — never bureaucratic.
-- Persona: calm, respectful, gender-selectable, addresses elders with appropriate honorifics.
-- Fallback: any voice turn can be reviewed as text; any text turn can be replayed as voice.
-
----
-
-## 10. Navigation Structure
-
-Mobile-first, thumb-reachable, minimal chrome.
-
-- **Bottom nav (Citizen role):** Home (Conversation) · Benefits · Family · Documents · Profile
-- **Persistent voice button** floating above bottom nav.
-- **Contextual entry points** to Applications and Help surface inside relevant cards, not as top-level noise.
-- **Role switcher** in Profile for users who are also volunteers/NGO staff.
-- **Officer/NGO** roles get a dedicated desktop-optimized workspace with a left sidebar.
-
-Design language: generous whitespace, large type, quiet color, one clear action per screen — Apple-grade restraint, Perplexity-grade answer clarity.
-
----
-
-## 11. Future Scalability
-
-- **Geographic:** state-by-state rollout; scheme corpus modular per state.
-- **Linguistic:** add languages/dialects without retraining the core reasoning layer.
-- **Channel:** WhatsApp bot, IVR phone line, kiosk mode for CSCs — all reusing the same intake and eligibility engines.
-- **Integrations:** DigiLocker, Aadhaar-based eKYC, UMANG, state portals via APIs as they open up.
-- **Partners:** CSR programs, cooperative banks, insurance sakhis via a Partner API.
-- **Data flywheel:** anonymized coverage-gap insights back to government and NGOs.
-
----
-
-## 12. Product Goals
-
-**6-month goals**
-- 100,000 citizens screened.
-- ≥ 5 correctly-matched schemes per citizen on average.
-- ≥ 60% of users complete intake in voice mode.
-- ≥ 40% of matched users initiate at least one application.
-
-**12-month goals**
-- Deployed with 20+ NGO partners.
-- Live in 8 states, 11 languages.
-- Measurable "₹ unlocked per user" metric published transparently.
-
-**Long-term**
-- Become the default welfare interface for India — the "one number / one app you tell your parents to use."
-
----
-
-## 13. User Experience Principles
-
-1. **Conversation over forms.** If a form field can be a question, it is a question.
-2. **Dignity first.** No user is ever told "you are ineligible" — they are told what they *do* qualify for.
-3. **Plain language, always.** 3rd-grade reading level in every supported language.
-4. **Explainability is UX.** Every recommendation shows its reasoning.
-5. **Voice is equal to text.** Not a fallback, a peer.
-6. **Trust through transparency.** Show data usage, consent, and sources up front.
-7. **One clear next step per screen.** Never overwhelm.
-8. **Assisted mode is native.** Volunteers acting on behalf of citizens is a first-class flow, not a workaround.
-9. **Offline-tolerant.** Field workers must be able to intake without connectivity.
-10. **Feels like Apple + Perplexity + a kind welfare officer — never like a sarkari website.**
+Before build begins, the following must be signed off:
+1. Final color values (light + dark) in oklch.
+2. Font choices confirmed (with Indic coverage tested).
+3. Voice orb motion spec (video/gif reference).
+4. Copy tone guide for AI persona (sample prompts + refusals).
+5. Scheme card + Application card visual comps.
+6. Empty/loading/error illustrations set.
 
 ---
 
 ## Next Step
 
-Approve this blueprint (or request edits). Once approved, the next discovery artifact will be the **Design System + Screen Inventory** — still no code — followed by the **AI + Data Architecture** doc. Only after those are signed off do we move to build.
+Approve this Design System & Screen Inventory. On approval, the next discovery artifact is the **AI + Data Architecture** document (scheme knowledge base schema, eligibility engine, agent orchestration, voice pipeline, storage & consent model) — still no code. Only after that is signed off do we move to build.
