@@ -3,13 +3,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
-import { Loader2, Send, Sparkles } from "lucide-react";
+import { Loader2, RotateCcw, Send, Sparkles, Square, Volume2, VolumeX } from "lucide-react";
 import { PageShell } from "@/components/app-shell";
 import { VoiceOrb } from "@/components/voice-orb";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { sendMessage, listConversations, getConversation, getProfile } from "@/lib/citizen.functions";
 import { toast } from "sonner";
+import { useSpeech } from "@/hooks/use-speech";
+import { LifeEventsGrid } from "@/components/life-events";
 
 export const Route = createFileRoute("/_authenticated/assistant")({
   head: () => ({
@@ -38,6 +40,7 @@ function AssistantPage() {
   const [suggested, setSuggested] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { speak, stop, replay, muted, setMuted, speaking, loadingId } = useSpeech();
 
   const listConv = useServerFn(listConversations);
   const getConv = useServerFn(getConversation);
@@ -79,6 +82,7 @@ function AssistantPage() {
       setMessages((m) => [...m, { role: "user", content: text }, { role: "assistant", content: "…thinking" }]);
       setSuggested([]);
       setInput("");
+      stop();
     },
     onSuccess: (res) => {
       setActiveId(res.conversation_id);
@@ -88,6 +92,8 @@ function AssistantPage() {
         return next;
       });
       setSuggested(res.suggested_prompts ?? []);
+      const id = `${res.conversation_id}-${Date.now()}`;
+      speak(id, res.reply);
       if (res.profile_updates && Object.keys(res.profile_updates).length > 0) {
         toast.success("I updated your profile with what you shared.");
         qc.invalidateQueries({ queryKey: ["profile"] });
@@ -165,6 +171,38 @@ function AssistantPage() {
         </aside>
 
         <div className="flex min-h-[70vh] flex-col rounded-3xl border border-border/70 bg-card shadow-sm">
+          <div className="flex items-center justify-between border-b border-border/60 px-4 py-2">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">SAARTHI</p>
+            <div className="flex items-center gap-1">
+              {speaking && (
+                <Button variant="ghost" size="sm" className="h-8 rounded-full px-3 text-xs" onClick={stop}>
+                  <Square className="mr-1 h-3 w-3" fill="currentColor" />
+                  Stop speaking
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 rounded-full px-3 text-xs"
+                onClick={replay}
+                disabled={!!loadingId}
+                title="Replay last reply"
+              >
+                <RotateCcw className="mr-1 h-3 w-3" />
+                Replay
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 rounded-full px-3 text-xs"
+                onClick={() => setMuted(!muted)}
+                title={muted ? "Unmute voice" : "Mute voice"}
+              >
+                {muted ? <VolumeX className="mr-1 h-3 w-3" /> : <Volume2 className="mr-1 h-3 w-3" />}
+                {muted ? "Muted" : "Voice on"}
+              </Button>
+            </div>
+          </div>
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-6">
             {showStarters ? (
               <EmptyState onPick={handleSubmit} />
@@ -228,7 +266,8 @@ function AssistantPage() {
 
 function EmptyState({ onPick }: { onPick: (t: string) => void }) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-6 py-10 text-center">
+    <div className="flex h-full flex-col gap-6 py-6">
+      <div className="flex flex-col items-center gap-4 text-center">
       <span
         className="inline-flex h-16 w-16 items-center justify-center rounded-3xl text-primary-foreground shadow-lg"
         style={{ backgroundColor: "var(--trust)" }}
@@ -244,7 +283,9 @@ function EmptyState({ onPick }: { onPick: (t: string) => void }) {
           schemes you may qualify for. In any language you're comfortable in.
         </p>
       </div>
-      <div className="grid w-full max-w-xl gap-2 sm:grid-cols-2">
+      </div>
+      <LifeEventsGrid onPick={onPick} />
+      <div className="grid w-full gap-2 sm:grid-cols-2">
         {STARTERS.map((s) => (
           <button
             key={s}
