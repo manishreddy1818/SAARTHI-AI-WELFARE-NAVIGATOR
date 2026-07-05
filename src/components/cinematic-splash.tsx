@@ -16,8 +16,10 @@ const SEQUENCE: Phase[] = [
   { kind: "done" },
 ];
 
+// Written phonetically so the browser speech engine reads it as a word,
+// not "S-A-A-R-T-H-I".
 const NARRATION =
-  "Namaste. I'm SAARTHI, your AI Welfare Navigator. Let's make sure you never miss a government benefit you deserve.";
+  "Namaste. I am Saarthi, your A.I. Welfare Navigator. Let's make sure you never miss a government benefit you deserve.";
 
 export function CinematicSplash({ onFinish }: { onFinish: () => void }) {
   const [idx, setIdx] = useState(0);

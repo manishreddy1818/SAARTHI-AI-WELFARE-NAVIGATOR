@@ -37,6 +37,60 @@ export const ACCENT_OPTIONS = [
     instructions:
       "Speak with a natural Hindi-influenced Indian accent, warm and respectful. Slightly slower pace.",
   },
+  {
+    id: "tamil",
+    label: "Tamil-leaning",
+    instructions:
+      "Speak English with a natural Tamil-influenced South Indian accent. Warm, respectful, clear pronunciation.",
+  },
+  {
+    id: "telugu",
+    label: "Telugu-leaning",
+    instructions:
+      "Speak English with a natural Telugu-influenced South Indian accent. Warm, calm and clear.",
+  },
+  {
+    id: "kannada",
+    label: "Kannada-leaning",
+    instructions:
+      "Speak English with a natural Kannada-influenced South Indian accent. Warm and friendly.",
+  },
+  {
+    id: "bengali",
+    label: "Bengali-leaning",
+    instructions:
+      "Speak English with a natural Bengali-influenced Indian accent. Melodic and gentle.",
+  },
+  {
+    id: "marathi",
+    label: "Marathi-leaning",
+    instructions:
+      "Speak English with a natural Marathi-influenced Indian accent. Warm, clear, respectful.",
+  },
+  {
+    id: "punjabi",
+    label: "Punjabi-leaning",
+    instructions:
+      "Speak English with a natural Punjabi-influenced North Indian accent. Warm, hearty, friendly.",
+  },
+  {
+    id: "gujarati",
+    label: "Gujarati-leaning",
+    instructions:
+      "Speak English with a natural Gujarati-influenced Indian accent. Warm and welcoming.",
+  },
+  {
+    id: "malayalam",
+    label: "Malayalam-leaning",
+    instructions:
+      "Speak English with a natural Malayalam-influenced South Indian accent. Gentle and clear.",
+  },
+  {
+    id: "urdu",
+    label: "Urdu-leaning",
+    instructions:
+      "Speak English with a soft Urdu-influenced South Asian accent. Polite, warm and clear.",
+  },
 ] as const;
 
 type AccentId = (typeof ACCENT_OPTIONS)[number]["id"];
