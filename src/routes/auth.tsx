@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PageShell } from "@/components/app-shell";
 import { BrandMark } from "@/components/brand";
 import { toast } from "sonner";
@@ -36,6 +37,7 @@ function AuthPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [authMessage, setAuthMessage] = useState<string | null>(null);
 
   const defaultRedirect = role === "partner" ? "/partner" : "/citizen";
 
@@ -50,6 +52,8 @@ function AuthPage() {
   }, [navigate, redirect, defaultRedirect]);
 
   async function handleGoogle() {
+    if (loading) return;
+    setAuthMessage(null);
     setLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
@@ -69,10 +73,12 @@ function AuthPage() {
   }
 
   async function handleEmail(mode: "signin" | "signup", email: string, password: string, name: string) {
+    if (loading) return;
+    setAuthMessage(null);
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -81,6 +87,12 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        if (!data.session) {
+          const message = "Account created. Please check your email to confirm it, then sign in.";
+          setAuthMessage(message);
+          toast.success(message);
+          return;
+        }
         toast.success("Account created. Welcome to SAARTHI.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -88,7 +100,9 @@ function AuthPage() {
       }
       navigate({ to: safePath(redirect) ?? defaultRedirect, replace: true });
     } catch (e: any) {
-      toast.error(e?.message ?? "Could not sign in.");
+      const message = friendlyAuthMessage(e, mode);
+      setAuthMessage(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -139,6 +153,12 @@ function AuthPage() {
             or
             <span className="h-px flex-1 bg-border" />
           </div>
+
+          {authMessage && (
+            <Alert className="mb-5 border-[var(--trust)]/30 bg-[var(--trust)]/5">
+              <AlertDescription>{authMessage}</AlertDescription>
+            </Alert>
+          )}
 
           <Tabs defaultValue="signin">
             <TabsList className="grid w-full grid-cols-2">
@@ -242,6 +262,28 @@ function safePath(p: string | undefined) {
   if (!p) return undefined;
   if (!p.startsWith("/") || p.startsWith("//")) return undefined;
   return p;
+}
+
+function friendlyAuthMessage(error: any, mode: "signin" | "signup") {
+  const code = String(error?.code ?? "").toLowerCase();
+  const raw = String(error?.message ?? "").toLowerCase();
+
+  if (code.includes("invalid_credentials") || raw.includes("invalid login credentials")) {
+    return "Wrong email or password. If you do not have an account yet, choose Create account.";
+  }
+  if (code.includes("weak_password") || raw.includes("weak password") || raw.includes("pwned")) {
+    return "This password is too common and not allowed. Please choose a stronger, unique password.";
+  }
+  if (code.includes("user_already") || code.includes("email_exists") || raw.includes("already registered") || raw.includes("already exists")) {
+    return "An account already exists with this email. Please use Sign in instead.";
+  }
+  if (raw.includes("email not confirmed")) {
+    return "Please confirm your email first, then sign in again.";
+  }
+
+  return mode === "signup"
+    ? "Could not create the account. Please check the details and try again."
+    : "Could not sign in. Please check your email and password.";
 }
 
 function GoogleIcon({ className }: { className?: string }) {
