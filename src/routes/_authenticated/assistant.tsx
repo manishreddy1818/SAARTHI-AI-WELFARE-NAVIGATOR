@@ -35,6 +35,7 @@ const STARTERS = [
 function AssistantPage() {
   const qc = useQueryClient();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isNew, setIsNew] = useState(true);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [suggested, setSuggested] = useState<string[]>([]);
@@ -51,10 +52,10 @@ function AssistantPage() {
   const profQ = useQuery({ queryKey: ["profile"], queryFn: () => getProf() });
 
   useEffect(() => {
-    if (!activeId && convsQ.data && convsQ.data.length > 0) {
+    if (!activeId && !isNew && convsQ.data && convsQ.data.length > 0) {
       setActiveId(convsQ.data[0].id);
     }
-  }, [convsQ.data, activeId]);
+  }, [convsQ.data, activeId, isNew]);
 
   useEffect(() => {
     if (!activeId) {
@@ -86,6 +87,7 @@ function AssistantPage() {
     },
     onSuccess: (res) => {
       setActiveId(res.conversation_id);
+      setIsNew(false);
       setMessages((m) => {
         const next = [...m];
         next[next.length - 1] = { role: "assistant", content: res.reply };
@@ -130,6 +132,7 @@ function AssistantPage() {
               className="h-8 rounded-full px-3 text-xs"
               onClick={() => {
                 setActiveId(null);
+                setIsNew(true);
                 setMessages([]);
                 setSuggested([]);
               }}
@@ -141,7 +144,7 @@ function AssistantPage() {
             {(convsQ.data ?? []).map((c) => (
               <li key={c.id}>
                 <button
-                  onClick={() => setActiveId(c.id)}
+                  onClick={() => { setActiveId(c.id); setIsNew(false); }}
                   className={`w-full truncate rounded-xl px-3 py-2 text-left text-sm transition-colors ${
                     activeId === c.id ? "bg-secondary text-secondary-foreground" : "hover:bg-secondary/60 text-muted-foreground"
                   }`}
