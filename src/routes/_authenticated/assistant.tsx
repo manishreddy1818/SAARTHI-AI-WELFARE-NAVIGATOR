@@ -75,6 +75,18 @@ function AssistantPage() {
     textareaRef.current?.focus();
   }, [activeId]);
 
+  const greetedRef = useRef(false);
+  useEffect(() => {
+    if (greetedRef.current) return;
+    if (profQ.isLoading) return;
+    greetedRef.current = true;
+    const name = (profQ.data?.full_name || "").split(" ")[0];
+    const greeting = name
+      ? `Namaste ${name}. I'm SAARTHI. Tell me a little about you or your family, and I'll find the welfare schemes you may qualify for.`
+      : `Namaste. I'm SAARTHI, your welfare navigator. Tell me a little about you or your family, and I'll find the schemes you may qualify for.`;
+    speak(`greeting-${Date.now()}`, greeting);
+  }, [profQ.isLoading, profQ.data, speak]);
+
   const mutation = useMutation({
     mutationFn: async (text: string) => {
       return send({ data: { conversation_id: activeId, text } });
