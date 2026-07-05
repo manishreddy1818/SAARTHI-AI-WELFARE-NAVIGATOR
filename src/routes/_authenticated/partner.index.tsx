@@ -15,7 +15,7 @@ import { PageShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { listPartnerCitizens, partnerStats } from "@/lib/partner.functions";
 
-export const Route = createFileRoute("/_authenticated/partner")({
+export const Route = createFileRoute("/_authenticated/partner/")({
   head: () => ({
     meta: [
       { title: "Partner dashboard — SAARTHI" },
