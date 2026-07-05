@@ -1,484 +1,277 @@
-# SAARTHI — AI & Data Architecture (Discovery Phase III)
+# SAARTHI — MVP Implementation Contract
 
-Discovery only. No code. Builds on the approved Product Blueprint and Design System. This is the final planning document before implementation.
+Final planning artifact. No code in this document. Signed against the approved Product Blueprint, Design System & Screen Inventory, and AI & Data Architecture.
 
-Guiding rule: **Every AI decision must be explainable, grounded, auditable, and reversible.** The AI never fabricates schemes, never issues an eligibility verdict without a source rule, and never persists sensitive data without explicit consent.
-
----
-
-## PART A — SYSTEM OVERVIEW
-
-SAARTHI is organized around a single **AI Orchestrator** that the user never sees. The user only ever talks to "SAARTHI." The Orchestrator routes each turn through specialized agents, merges their outputs, and returns a single explainable answer.
-
-```text
-┌───────────────────────────────────────────────────────────────────┐
-│                          CLIENT (Web/PWA)                          │
-│   Voice Orb · Transcript · Cards · Consent prompts · A11y layer    │
-└───────────────▲───────────────────────────────────▲───────────────┘
-                │ audio/text                        │ streamed reply
-                │                                   │
-        ┌───────┴───────┐                   ┌───────┴────────┐
-        │  STT service  │                   │  TTS service   │
-        └───────┬───────┘                   └───────▲────────┘
-                │ transcript+lang                   │ audio+captions
-                ▼                                   │
-┌───────────────────────────────────────────────────┴───────────────┐
-│                        AI ORCHESTRATOR                             │
-│  Turn state · Policy · Safety · Routing · Explanation assembly     │
-└──┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬───────┘
-   │      │      │      │      │      │      │      │      │
-   ▼      ▼      ▼      ▼      ▼      ▼      ▼      ▼      ▼
- Conv   Profile Intent Scheme Elig.  Prior. Docs   Apply Opport.
- Agent  Agent   Agent  Intel  Reason Agent  Agent  Guide Unlock
-                       Agent  Agent                Agent Agent
-                              │
-                              ▼
-                  ┌───────────────────────┐
-                  │   MEMORY AGENT (R/W)  │
-                  └──────────┬────────────┘
-                             ▼
-   ┌─────────────────────────────────────────────────────────────┐
-   │  DATA PLANE                                                 │
-   │  Citizen Store · Family · Documents · Applications ·        │
-   │  Conversations · Consents · Notifications                   │
-   │                                                             │
-   │  KNOWLEDGE PLANE                                            │
-   │  Scheme Knowledge Base (versioned) · Rules Engine ·         │
-   │  Vector Index · Source Registry                             │
-   └─────────────────────────────────────────────────────────────┘
-```
-
-Design invariants:
-- The Orchestrator is the only component that talks to agents.
-- Agents are **pure functions of (Profile + Context + KB)** — no agent writes to user data directly; only the Memory Agent writes, and only with reasons attached.
-- Every assistant message carries an **Explanation Envelope** (sources, confidence, trace).
-- The Rules Engine is deterministic; LLMs only interpret and explain rules, never override them.
+Guiding rule: **A smaller product that works flawlessly beats a larger one that partially works.** Every feature listed below must ship demo-ready with real behavior, real data, and complete states. Anything that cannot meet that bar is cut into Future Scope, not shipped as a placeholder.
 
 ---
 
-## PART B — THE AI ORCHESTRATOR
-
-Responsibilities per turn:
-1. **Ingest** — receive `{turn_id, user_id, input(text/audio), language, consent_snapshot}`.
-2. **Normalize** — STT if needed; language detect; simple-language mode flag.
-3. **Route** — call Intent Agent → decide which downstream agents run and in what order.
-4. **Coordinate** — run agents (parallel where safe), enforce timeouts, retry on transient failures.
-5. **Reconcile** — merge outputs into a candidate response; run Safety & Policy checks.
-6. **Explain** — attach Explanation Envelope (sources, confidence, next action).
-7. **Persist** — hand deltas to Memory Agent (profile updates, saved schemes, consent events).
-8. **Emit** — return streamed tokens + structured UI payload (cards, chips) + optional TTS.
-
-Policies enforced centrally:
-- **No-fabrication:** every scheme mention must resolve to a `scheme_id` in the KB.
-- **Consent gating:** any agent request for sensitive fields checks the live Consent record before asking the user.
-- **Confidence floor:** eligibility verdicts below the floor render as *"Check with officer"* rather than *"Eligible."*
-- **Language coherence:** the response language matches the last user turn unless the user switches.
-- **Budget:** per-turn token/time budget; degrade gracefully to a shorter answer under pressure.
-
-Turn state (in-memory, per conversation):
+## 1. Golden Demo Path (the single flow that must be flawless)
 
 ```text
-TurnState {
-  conversation_id, user_id, actor_id (self|volunteer_of|family_of),
-  language, simple_mode, consents[],
-  profile_snapshot, recent_messages[N],
-  active_intents[], pending_clarifications[],
-  budget { tokens, ms, tool_calls }
-}
+Splash  →  Landing  →  Choose Journey  →  Auth (citizen)  →  Citizen Dashboard
+     ↓
+Tap "Talk to SAARTHI"  →  AI Assistant (voice + text)
+     ↓
+AI intake conversation  →  Citizen Profile built live
+     ↓
+AI returns ranked Benefits Feed  →  Tap a scheme
+     ↓
+Scheme Details: why eligible · docs needed · steps · official source · confidence
+     ↓
+Opportunity Unlock card: "If you add X, 3 more schemes unlock"
+     ↓
+Save Recommendation  →  Appears in Dashboard + Family Dashboard
 ```
+
+This end-to-end path is the acceptance test for the MVP. Everything else supports it.
 
 ---
 
-## PART C — SPECIALIZED AGENTS
+## 2. In-Scope Feature Ledger (what we will build)
 
-Each agent is specified as: **Purpose · Inputs · Outputs · Tools · Guardrails**.
+Each item ships only when it satisfies the Quality Bar in §5.
 
-### C1. Conversation Agent
-- **Purpose:** Natural dialogue, tone, clarifications, empathy.
-- **Inputs:** TurnState, latest user message, suggested reply skeleton from Orchestrator.
-- **Outputs:** Final natural-language reply (in user's language, at target reading level), list of `follow_up_questions[]`, `next_suggested_prompts[]`.
-- **Tools:** none (pure language). Reads reply skeleton + Explanation Envelope.
-- **Guardrails:** never asserts eligibility on its own — must use the reasoning already attached. Never introduces a scheme name that isn't in the payload.
+### Phase 1 — Foundations & Citizen Product
+| # | Feature | Contract |
+|---|---|---|
+| 1.1 | Design system tokens + shell | Semantic tokens (light+dark), typography, motion primitives, VoiceOrb primitive, empty/loading/error components |
+| 1.2 | Route shell (TanStack) | All routes from IA created, no dead links, bottom nav (citizen), public nav |
+| 1.3 | Splash Experience | Auto-advancing sequence, skip, first-visit-only, respects reduced-motion |
+| 1.4 | Landing Page | Real content for Hero · Problem · Solution · Features · How · Stories · FAQ · Footer |
+| 1.5 | Choose Your Journey | 3 real routes: citizen signup, partner signup, public stories |
+| 1.6 | Authentication | Email + password, Google sign-in, language + accessibility onboarding step |
+| 1.7 | Citizen Dashboard | Greeting, estimated benefits, recommended actions, applications strip, family strip, recent activity, quick AI |
+| 1.8 | AI Assistant | Voice + text, live captions, streaming responses, suggested prompts, transcript, Explanation Envelope surfacing |
+| 1.9 | Citizen Profile Creation | Built conversationally by AI; editable in Profile screen |
+| 1.10 | Benefits Feed | Ranked scheme cards with priority, benefit, verdict, confidence, actions |
+| 1.11 | Scheme Details | Full Explanation Envelope UI + docs checklist + steps + save + apply |
+| 1.12 | Family Dashboard | Add/edit members, per-member eligible count, member detail |
+| 1.13 | Documents | Manual upload, checklist, expiry chips, linked-to-scheme badges (no OCR pipeline for MVP) |
+| 1.14 | Applications | Status tracking (started/documents_needed/submitted/approved/rejected), timeline, next action |
+| 1.15 | Profile | Personal info, language, accessibility, voice settings, notifications, role switch, data & consent (view/export/delete), logout |
 
-### C2. Citizen Profile Agent
-- **Purpose:** Extract and maintain a single, continuously updated Citizen Profile.
-- **Inputs:** user turns, optional document OCR events, volunteer intake forms.
-- **Outputs:** structured `ProfileDelta` — additions/updates to fields with `source`, `confidence`, `consent_required`.
-- **Fields:** age, gender, state, district, block/village, occupation, income_band, education, family composition, disability status, caste category (opt-in), documents held, bank account presence, land holding, house type.
-- **Guardrails:**
-  - Sensitive fields (caste, disability, exact income, religion) require a matching consent record — else the field is queued as `pending_consent`.
-  - Every field carries `provenance` (user_said / doc_extracted / volunteer_entered) and `last_verified_at`.
-  - Never overwrites a user-confirmed value silently; produces a `conflict` event.
+### Phase 2 — AI Intelligence (backing Phase 1 surfaces)
+| # | Component | Contract |
+|---|---|---|
+| 2.1 | AI Orchestrator | Server-side; per-turn state, routing, budget, policy checks, Explanation assembly |
+| 2.2 | Conversation Agent | Natural replies bound to the payload; no free-form scheme mentions |
+| 2.3 | Citizen Profile Agent | Extracts ProfileDeltas with provenance + consent flags |
+| 2.4 | Scheme Intelligence Agent | Hybrid retrieval over seeded KB; grounded to `scheme_id + version` |
+| 2.5 | Eligibility Reasoning | Deterministic Rules Engine + LLM explainer; four verdicts |
+| 2.6 | Opportunity Unlock | Simulates hypothetical profile changes; returns unlocks with estimated gain |
+| 2.7 | Explainable AI | Every recommendation carries a complete Explanation Envelope; enforced server-side |
+| 2.8 | Memory | Sole writer to Cloud tables; every write carries actor + reason |
+| 2.9 | Voice Conversation | Streaming STT + streaming TTS; barge-in; captions on by default; language switch mid-conversation |
 
-### C3. Intent Detection Agent
-- **Purpose:** Decide what the user is trying to do this turn.
-- **Intents:** `find_schemes`, `check_eligibility`, `application_help`, `document_help`, `family_welfare`, `renewal_help`, `general_q`, `human_handoff`, `switch_language`, `stop`.
-- **Outputs:** ranked `intents[]` with confidence; `slots` (e.g. target person = self/family member id, scheme_id if named).
-- **Guardrails:** low-confidence → orchestrator asks one clarifying question via Conversation Agent.
+Phase 2 note — MVP simplifications that keep the architecture intact:
+- Intent Agent and Benefit Prioritization Agent are collapsed into the Orchestrator's routing + a scoring function for MVP; they can be extracted later without contract changes.
+- Application Guidance is served from the KB `application_process` field directly (no separate agent runtime for MVP).
+- Document Intelligence Agent is limited to "missing / expiring / reusable" reasoning over user-declared documents; OCR is out of scope.
 
-### C4. Scheme Intelligence Agent
-- **Purpose:** Retrieve candidate schemes from the KB — never invent.
-- **Inputs:** Profile snapshot, intent slots, geography, language.
-- **Method:** hybrid retrieval — structured filter (state/central + applicable_states + category + beneficiary tags) + vector search over scheme descriptions + rule-tag boosting.
-- **Outputs:** `candidates[] = {scheme_id, version, match_reasons[], retrieval_score}`.
-- **Guardrails:** results must include `scheme_id` present in KB at the returned `version`; empty results are honest (no filler).
+### Phase 3 — Welfare Partner Experience (thin but real)
+| # | Feature | Contract |
+|---|---|---|
+| 3.1 | Partner Dashboard | Real KPIs from seeded + demo-run data |
+| 3.2 | Voice Intake | Volunteer speaks; live transcript + live profile extraction; save creates a real citizen record with consent |
+| 3.3 | Citizen Search | Search + filter partner's scoped citizens |
+| 3.4 | Citizen Management | View, edit consent-scoped fields, add follow-up |
+| 3.5 | Reports | Export CSV of assisted citizens + outcomes (date-range filter) |
+| 3.6 | Impact Dashboard | Citizens helped · ₹ unlocked · applications · approval rate · family coverage |
 
-### C5. Eligibility Reasoning Agent
-- **Purpose:** Deterministic verdict + human explanation per candidate scheme.
-- **Method:** Rules Engine evaluates each scheme's rule tree against the Profile. LLM only translates results into human language. **The verdict is the rules engine's, not the LLM's.**
-- **Verdicts:** `eligible`, `likely_eligible`, `need_more_info`, `not_currently_eligible`.
-- **Outputs per scheme:**
-  ```text
-  {
-    scheme_id, version,
-    verdict, confidence (0–1),
-    matched_rules[], failed_rules[], missing_facts[],
-    explanation_short, explanation_long,
-    source_refs[]  // exact URL + clause id in KB
-  }
-  ```
-- **Guardrails:** never emits `eligible` if any `failed_rule` exists; missing facts trigger a targeted clarification, not a guess.
-
-### C6. Benefit Prioritization Agent
-- **Purpose:** Rank the eligible + likely-eligible set for the user's context.
-- **Score = w1·FinancialImpact + w2·SocialImpact + w3·Urgency + w4·DeadlineProximity + w5·Confidence + w6·FamilyImpact − w7·EffortToApply.**
-- **Inputs:** eligibility outputs, benefit amounts, deadlines, family size, ease-of-claim tag.
-- **Outputs:** ordered `recommendations[]` with per-item score components (for transparency chip).
-- **Guardrails:** weights are configurable per persona (senior/farmer/etc) and per volunteer campaign; changes are logged.
-
-### C7. Document Intelligence Agent
-- **Purpose:** Reason about the citizen's document set.
-- **Inputs:** documents on file (with expiry + type), documents required by target schemes.
-- **Outputs:** `{missing[], expiring_soon[], reusable_across_schemes[], suggested_next_upload}`.
-- **Tools:** OCR extraction (name/DOB/ID number), expiry parser, DigiLocker connector (future).
-- **Guardrails:** never asserts a document is "valid" — only "present, expiring, or missing." Human review for OCR conflicts.
-
-### C8. Application Guidance Agent
-- **Purpose:** Turn a scheme into a step-by-step application journey.
-- **Outputs:** `{steps[], estimated_timeline, required_office, official_portal, next_action, offline_alternative}`.
-- **Guardrails:** steps must be derived from KB's `application_process`; never invents portals. Marks "assisted mode available" when a volunteer network covers the district.
-
-### C9. Opportunity Unlock Agent
-- **Purpose:** Proactive, forward-looking recommendations.
-- **Method:** simulate hypothetical profile changes ("if income certificate added", "if child turns 6", "if disability certified") and re-run eligibility to find newly unlocked schemes.
-- **Outputs:** `unlocks[] = {trigger, unlocked_schemes[], estimated_gain}`.
-- **Guardrails:** framed as opportunities, never as pressure; sensitive triggers respect consent.
-
-### C10. Memory Agent
-- **Purpose:** Sole writer to the data plane on the AI's behalf.
-- **Writes:** ProfileDeltas (with provenance), saved schemes, conversation turns, consent events, notifications, application state transitions.
-- **Reads:** anything the Orchestrator needs to hydrate TurnState.
-- **Guardrails:** every write carries `{actor, source_turn_id, reason, consent_id?}`; supports undo/rollback; enforces per-role write scopes.
-
-Agent communication pattern:
-
-```text
-Orchestrator ──▶ Intent
-Intent ──▶ Orchestrator
-Orchestrator ──▶ Profile (delta extract)
-Orchestrator ──▶ Scheme Intelligence (retrieve)  ─┐
-                                                  ├─ parallel
-Orchestrator ──▶ Document Intelligence (context) ─┘
-Scheme candidates ──▶ Eligibility Reasoning (per scheme, parallel)
-Eligibility results ──▶ Benefit Prioritization
-Prioritized list ──▶ Application Guidance (top N) + Opportunity Unlock
-All outputs ──▶ Orchestrator (reconcile + Explanation Envelope)
-Orchestrator ──▶ Conversation Agent (final natural reply)
-Orchestrator ──▶ Memory Agent (persist deltas + turn)
-Orchestrator ──▶ Client (stream reply + structured UI payload)
-```
+### Phase 4 — Presentation Polish
+| # | Feature | Contract |
+|---|---|---|
+| 4.1 | Real Citizen Journeys | 5 preloaded, replayable stories (Senior, Farmer, Student, Woman Entrepreneur, Disabled Citizen). Public at `/stories`. |
+| 4.2 | Beautiful Animations | Voice orb 4 states, route transitions, card hover, staggered enters — all respecting reduced-motion |
+| 4.3 | AI Thinking Animation | Shimmer bar, no spinners |
+| 4.4 | Accessibility | WCAG 2.2 AA baseline; keyboard-only pass; screen-reader pass on golden path |
+| 4.5 | Responsive Design | Mobile-first citizen; desktop-optimized partner; both tested at 3 breakpoints |
+| 4.6 | Loading / Empty / Error / Offline | On every screen; skeletons match final layout |
+| 4.7 | Error Handling | Toasts + inline; AI failures degrade with retry + text fallback; billing/rate-limit errors surfaced clearly |
 
 ---
 
-## PART D — KNOWLEDGE BASE
+## 3. Explicitly Out of Scope (Future Scope only — do not build)
 
-### D1. Scheme record schema
+- Blockchain, cryptocurrency, tokens.
+- Complex admin panels (any admin need is served by seed scripts or a minimal secured page, not a UI surface).
+- Social feed, user-to-user chat, comments, likes.
+- Payments / donations / subscriptions.
+- OCR-heavy document workflows (users declare document possession; no auto-extract at MVP).
+- Real government API integrations (DigiLocker, UMANG, Aadhaar eKYC) — mocked at KB level.
+- WhatsApp bot, IVR phone line, CSC kiosk channel.
+- SMS OTP / phone-number auth (email + Google only for MVP).
+- Native mobile apps.
+- Real-time push notifications (in-app notifications only; no push service).
+- Multi-tenant partner org onboarding UI (partner accounts seeded).
+- Full state-by-state KB rollout (see §6 seed set).
 
-```text
-Scheme {
-  scheme_id: string (stable)
-  version: semver
-  name: { en, hi, ... }               // localized
-  category: enum(pension, health, education, housing, agriculture,
-                 women, disability, employment, financial_inclusion, ...)
-  jurisdiction: { level: central|state, applicable_states[], applicable_districts[]? }
-  description: { en, hi, ... }        // plain-language
-  target_beneficiaries: tag[]         // e.g. senior_citizen, marginal_farmer
-  eligibility_rules: RuleTree         // machine-evaluable (see D2)
-  required_documents: DocRequirement[]
-  financial_benefits: {
-    kind: one_time | recurring | reimbursement | in_kind,
-    amount_inr?: number|range,
-    frequency?: monthly|annual|event,
-    non_monetary?: string
-  }
-  application_process: {
-    channels: [online, offline, csc, camp],
-    steps: Step[],
-    estimated_days: number,
-    responsible_office: string
-  }
-  official_link: url
-  deadlines: { rolling|window|event, dates? }
-  source: { authority, doc_url, retrieved_at, retrieved_by }
-  last_updated: datetime
-  review: { reviewed_by, reviewed_at, review_status }
-}
-```
-
-### D2. Rule representation (deterministic)
-
-Rules are stored as a typed tree the Rules Engine can evaluate without an LLM.
-
-```text
-Rule =
-  | Predicate { field, op(=,≠,<,≤,>,≥,in,not_in,exists), value }
-  | AllOf { rules[] }
-  | AnyOf { rules[] }
-  | NoneOf { rules[] }
-  | Requires { document_type }
-  | Geo { states[]|districts[] }
-  | Age { min?, max? }
-  | Income { max?, band? }
-```
-
-Each leaf carries a `clause_ref` pointing to the exact paragraph in the source PDF/notification — this is what surfaces as the "Why?" citation.
-
-### D3. Storage & retrieval
-
-- **Structured store:** relational tables for `schemes`, `scheme_rules`, `scheme_documents`, `scheme_benefits`, `scheme_versions`.
-- **Vector index:** embeddings of `name + description + beneficiary_tags` per language for hybrid search.
-- **Source registry:** immutable copies of original notifications with retrieval timestamps (audit).
-- **Versioning:** every change bumps `version`; old versions retained so past recommendations remain reproducible.
-- **Review workflow:** proposed diffs → human reviewer → publish → cache invalidation. LLMs may draft updates but never publish.
-
-### D4. Ingestion pipeline
-
-```text
-Government portal / gazette PDF
-     │
-     ▼
-Scraper / uploader (with source URL + timestamp)
-     │
-     ▼
-Extractor (LLM-assisted, structured output)  ──▶ Draft Scheme record
-     │
-     ▼
-Human reviewer (accept / edit / reject)
-     │
-     ▼
-Publish to KB (version++)  ──▶ Vector re-index  ──▶ Cache invalidate
-```
+If a demo question surfaces any of these, the answer is *"On the roadmap; here's what SAARTHI does today."*
 
 ---
 
-## PART E — EXPLAINABLE AI
+## 4. Data & Backend Scope (Lovable Cloud)
 
-Every assistant response that includes a recommendation or verdict carries an **Explanation Envelope**:
-
-```text
-Explanation {
-  why_recommended: string         // 1–2 sentence plain language
-  why_eligible: bullet[]          // maps to matched profile facts
-  missing_conditions: bullet[]    // maps to failed rules / missing facts
-  confidence: 0–1 + label(Low/Med/High)
-  required_next_action: string
-  official_source: { title, url, retrieved_at, clause_ref }
-  trust_note: string              // e.g. "Verdict based on rules; contact officer to confirm."
-  trace_id: uuid                  // links to full agent trace for audit
-}
-```
-
-UI contract: the transparency chip on every card reveals this envelope in full. No recommendation ships without a complete envelope.
-
----
-
-## PART F — VOICE ARCHITECTURE
-
-```text
-Mic capture (PWA)
-   │  16kHz PCM chunks
-   ▼
-Client VAD (voice-activity detection, barge-in)
-   │
-   ▼
-STT service ────► transcript (partial + final) + detected_language
-   │
-   ▼
-Orchestrator (TurnState.language ← detected; if user switched, ack in reply)
-   │
-   ▼
-Agents run (as in Part C)
-   │
-   ▼
-Response Composer ─► text tokens (streamed)
-   │                     │
-   │                     ▼
-   │              Client renders live captions
-   ▼
-TTS service ─► audio stream (streamed sentence-by-sentence)
-   │
-   ▼
-Client audio player (with pause/skip, barge-in cancels playback)
-```
+Tables shipped at MVP (mirroring the Data Model from the Architecture doc, trimmed to demo needs):
+`citizens`, `family_members`, `documents` (metadata + file), `applications`, `schemes`, `scheme_rules`, `scheme_documents`, `scheme_benefits`, `recommendations`, `conversations`, `messages`, `notifications`, `consents`, `welfare_partners`, `assisted_relationships`, `user_roles`.
 
 Rules:
-- STT and TTS are always **streamed**, not batch — perceived latency < 800ms for first audio.
-- Language detection runs on every turn; a mid-conversation switch is honored immediately and acknowledged.
-- Every voice turn produces text; text is the source of truth for logs, retries, and audits.
-- Captions on by default. Users can play back any assistant message.
-- Voice persona is configurable (Profile screen): gender, pace, honorific style.
+- Every table has RLS. Roles stored in `user_roles` (never on profile).
+- `has_role()` security-definer function used in policies.
+- Sensitive fields gated by both RLS and an active `consents` row.
+- Every mutable row carries `created_by`, `updated_at`, and (for AI writes) `source_turn_id + reason`.
+- `service_role` grants on every public table; `authenticated` grants scoped to what the app actually needs.
+- Storage bucket `documents` (private) for user document files.
+
+AI plane:
+- Chat + extraction: `google/gemini-3-flash-preview` via Lovable AI Gateway.
+- Embeddings for KB retrieval: Lovable AI Gateway embeddings model.
+- STT: `openai/gpt-4o-mini-transcribe` (streaming).
+- TTS: `openai/gpt-4o-mini-tts` (streamed sentence-by-sentence).
+- All AI calls go through server functions / server routes; `LOVABLE_API_KEY` never touches the client.
 
 ---
 
-## PART G — DATA MODEL
+## 5. Quality Bar (definition of done, per screen)
 
-### G1. Entities & relationships
+A screen may ship only when ALL of the following are true:
+1. Real data-bound content — no lorem ipsum, no dead cards.
+2. Loading state (skeleton matching final layout).
+3. Empty state (illustration + one clear next step).
+4. Error state (plain-language + retry + human-help escape).
+5. Success feedback for every mutating action (toast or inline).
+6. Keyboard-operable end-to-end; visible focus rings.
+7. Screen-reader pass: landmarks, labels, alt text.
+8. Mobile + desktop layouts verified at defined breakpoints.
+9. Dark mode parity.
+10. Every visible button/link is wired to a real destination or action.
 
-```text
-Citizen 1───* FamilyMember
-Citizen 1───* Document
-Citizen 1───* Application ───1 Scheme (versioned ref)
-Citizen 1───* Recommendation ───1 Scheme (versioned ref)
-Citizen 1───* Conversation 1───* Message
-Citizen 1───* Notification
-Citizen 1───* Consent
-Citizen *───* WelfarePartner   (via AssistedRelationship)
-Scheme 1───* SchemeRule
-Scheme 1───* SchemeDocumentReq
-Scheme 1───* SchemeBenefit
-WelfarePartner 1───* ImpactMetric
-```
+A recommendation may ship only when ALL of the following are true:
+1. Grounded — resolves to a real `scheme_id + version` in the KB.
+2. `why_recommended` present.
+3. `why_eligible` bullets present (mapped to profile facts).
+4. `missing_conditions` present when verdict ≠ eligible.
+5. `confidence` value + label present.
+6. `required_documents` list present.
+7. `next_step` present.
+8. `official_source` link with `retrieved_at` present.
+9. `trust_note` present.
 
-### G2. Key fields (contract only, no SQL)
-
-**Citizen** — id, phone, email?, name, language, accessibility_prefs, created_at, roles[].
-**FamilyMember** — id, primary_citizen_id, relationship, name, dob, gender, own_profile_ref?.
-**Document** — id, owner_id (citizen or family member), type, file_ref (encrypted), extracted_fields, issued_on?, expires_on?, verified_status, uploaded_by, created_at.
-**Application** — id, citizen_id, scheme_id, scheme_version, status(started|documents_needed|submitted|approved|rejected|closed), current_step, timeline_events[], assisted_by_partner_id?, next_action, updated_at.
-**Scheme** — see Part D.
-**Recommendation** — id, citizen_id, scheme_id, scheme_version, verdict, confidence, priority_score, explanation_envelope, generated_at, dismissed_at?.
-**Conversation** — id, citizen_id, actor_id, started_at, language, channel(web|whatsapp|ivr).
-**Message** — id, conversation_id, role(user|assistant|system|tool), content, audio_ref?, tokens_in/out, agent_trace_id, created_at.
-**Notification** — id, citizen_id, kind(renewal|new_match|doc_expiring|application_update), channel, payload, sent_at, read_at.
-**Consent** — id, citizen_id, scope(caste|disability|income|share_with_partner|voice_recording_retention|analytics), state(granted|revoked), granted_at, revoked_at?, evidence(turn_id/screen).
-**WelfarePartner** — id, org_name, type(NGO|CSR|SHG|Govt), state, verified, staff_users[].
-**AssistedRelationship** — partner_id, citizen_id, consent_id, scope, created_at, ended_at?.
-**ImpactMetric** — partner_id, period, citizens_assisted, applications, ₹_unlocked, approval_rate, family_coverage_pct.
-
-### G3. Provenance & audit
-
-Every mutable row carries `created_by`, `updated_by`, `source_turn_id?`, `reason?`. Sensitive fields log a read audit (who accessed, when, why).
+The Orchestrator refuses to emit a recommendation missing any of the above.
 
 ---
 
-## PART H — PRIVACY & CONSENT
+## 6. Scheme Knowledge Base Seed (MVP)
 
-- **Layered consent:** base consent to use SAARTHI + per-scope consents (caste, disability, income, share-with-partner, voice retention, analytics).
-- **Just-in-time prompts:** first time an agent needs a sensitive field, the user sees *"Why we ask · How we use it · You can skip."* The answer is stored as a Consent record with `evidence`.
-- **Revocation is symmetric:** revoking a consent removes the associated fields from active reasoning immediately and schedules deletion per retention policy.
-- **User rights (all self-serve in Profile → Data & Consent):** view all stored data, export (JSON + human PDF), delete account, delete a single field, delete a conversation.
-- **Voice retention:** default = transcript kept, audio auto-deleted after 24h; users can opt into longer retention (with consent).
-- **Data minimization:** agents request only fields they need for the active intent; the Orchestrator strips unneeded fields from prompts.
-- **PII in logs:** redacted at write-time; only `trace_id` links a turn to its raw content in a separately-permissioned store.
+- **25–30 real Indian welfare schemes** covering the 5 demo personas end-to-end, sourced from official portals with URL + retrieval timestamp.
+- Coverage mix: central (PM-KISAN, PMAY-G, Ayushman Bharat, NSAP pensions, PMJDY, PMJJBY, PMSBY, Sukanya Samriddhi, Stand-Up India, etc.) + state-level examples from 2 pilot states.
+- Categories: pension, health, housing, agriculture, women, disability, education, financial inclusion, employment.
+- Every seeded scheme includes: rule tree, required documents, benefit amount, application steps, official link, source citation.
+- Ingestion: manual for MVP (no auto-scraper); recorded as a seed migration + reviewer sign-off.
 
 ---
 
-## PART I — SECURITY & ROLES
+## 7. Voice Contract (MVP)
 
-Roles (stored in a dedicated `user_roles` table, never on the profile):
-- **Citizen** — owns own data; can invite family members.
-- **Family Manager** — a Citizen with an accepted `AssistedRelationship` for household members; scoped to those members.
-- **Village Volunteer** — can run assisted intake for citizens who granted consent; sees only those citizens.
-- **Welfare Partner Staff** — scoped to their organization's citizens + campaigns.
-- **Partner Admin** — manages staff and campaigns within org.
-- **Government Officer** — read-only aggregate/analytic access; no PII beyond what officer-role policy allows.
-- **SAARTHI Administrator** — platform ops; no default read on citizen PII (break-glass with dual approval + audit).
+- Push-to-talk button on the AI Assistant; always-available floating voice orb on citizen screens.
+- Streaming STT with partial + final transcripts; first-token TTS latency target ≤ 1.2s (best-effort).
+- Barge-in cancels TTS playback.
+- Captions on by default; every voice turn produces text that persists.
+- Languages shipped: **English + Hindi** at MVP, with the language switcher UI in place and the pipeline ready to accept more. Adding a language post-MVP is data + prompt work, not architecture work.
+- Voice retention: transcript kept; raw audio discarded within 24h unless user opts in.
+
+---
+
+## 8. Consent & Privacy (MVP)
+
+- Layered consents implemented: base app consent + per-scope (caste, disability, income, share-with-partner, voice retention).
+- Just-in-time prompts before any sensitive extraction; skippable; recorded with `evidence(turn_id)`.
+- Profile → Data & Consent screen supports **view all data**, **export as JSON**, **delete a single field**, **delete a conversation**, **delete account**.
+- Revocation removes the field from active reasoning immediately.
+
+---
+
+## 9. Role & Access (MVP)
+
+Roles enabled: `citizen`, `family_manager` (implicit via relationship), `partner_staff`, `partner_admin`. Officer + platform_admin scaffolded in `user_roles` enum but no UI surface at MVP.
 
 Enforcement:
-- Row-level access policies at the data layer, keyed off role membership + explicit relationship (partner ↔ citizen via consented `AssistedRelationship`).
-- Sensitive-field access checked additionally against the citizen's active consents.
-- All admin/officer PII access is logged and shown to the citizen in their audit log.
-- No client-side role checks for authorization — client uses roles only for UX gating.
+- RLS policies keyed on `has_role()` + `assisted_relationships`.
+- Client uses role only for UX gating — never for authorization.
 
 ---
 
-## PART J — SCALABILITY
+## 10. Non-Goals & Trade-offs (things we intentionally accept at MVP)
 
-- **Multi-tenant KB:** scheme corpus is partitioned by jurisdiction; a citizen's queries filter to `central ∪ state`. Adding a state = ingest state schemes + tag; no core change.
-- **Multilingual by design:** all user-visible strings + KB descriptions store per-language; response generation localizes on demand.
-- **Channels:** the Orchestrator is channel-agnostic. Adapters for Web/PWA, WhatsApp Business, IVR, and CSC kiosk share one core.
-- **Government integrations:** pluggable connectors (DigiLocker, Aadhaar eKYC, UMANG, state portals). Absence of an API degrades to guided-offline flow, not failure.
-- **Offline-first field ops:** volunteer/kiosk apps queue intakes locally; sync on connectivity; conflict resolution uses provenance + timestamps.
-- **Model portability:** all model calls flow through a provider gateway; models are named per-role (chat, extraction, embeddings, STT, TTS) and swappable without touching agent logic.
-- **Horizontal scale:** Orchestrator is stateless per turn; TurnState is rehydrated from stores; agent calls parallelized where safe.
-- **Caching:** scheme retrievals + rule evaluations cached per `(profile_hash, jurisdiction, kb_version)` for repeat queries.
-
----
-
-## PART K — GOVERNANCE PRINCIPLES
-
-1. **No silent verdicts** — every eligibility outcome shows its rule trace.
-2. **Rules over LLMs** — deterministic engine owns verdicts; LLMs own language.
-3. **Sourced or silent** — no scheme mentioned without a KB `scheme_id + version`.
-4. **Consent is a record, not a checkbox** — every sensitive read/write ties to a stored Consent.
-5. **Reproducibility** — a past recommendation can be replayed against its `kb_version + profile_snapshot` and produce the same result.
-6. **Human-in-the-loop** — KB updates and any auto-generated scheme content are human-reviewed before publish.
-7. **Dignity in error** — the system never says "you are ineligible" as the final word; it always offers what the user *does* qualify for + who to talk to.
-8. **Auditability** — trace_id on every message; retention policies documented and enforced.
-9. **Right to be forgotten** — delete flows are complete, cascaded, and verifiable.
-10. **Fairness** — prioritization weights are auditable and reviewable per persona/state; bias reviews are quarterly.
+- Recommendations recompute on demand; no background job runs.
+- Notifications are in-app only (no email/SMS/push).
+- Partner org onboarding is seed-only; no self-serve org creation UI.
+- Officer analytics console is deferred.
+- Only 2 pilot states in KB; national coverage is roadmap.
+- OCR, DigiLocker, and government API submission all replaced by "Apply on official portal" outbound link.
+- Analytics is limited to internal event logging; no BI dashboard beyond partner Impact.
 
 ---
 
-## PART L — SUCCESS METRICS (measurable)
+## 11. Build Sequence (proposed phases — each ends with a working slice)
 
-- **Matching Accuracy** — % of AI-eligible verdicts confirmed by officer/outcome. Target: ≥ 92%.
-- **Grounding Rate** — % of scheme mentions with valid `scheme_id + version + source`. Target: 100% (enforced).
-- **Hallucination Rate** — mentions that fail grounding check. Target: 0 (blocked at Orchestrator).
-- **Conversation Completion Rate** — % of sessions reaching at least one recommendation. Target: ≥ 75%.
-- **Voice Usage** — % of turns via voice. Target: ≥ 60% among mobile users.
-- **Language Distribution** — active languages served / total supported. Watch for underserved languages.
-- **Application Completion Rate** — started → submitted. Target: ≥ 40%.
-- **Approval Rate** — submitted → approved. Baseline set post-launch per scheme.
-- **Benefits Unlocked (₹)** — per citizen, per partner, per state (headline outcome).
-- **Time-to-First-Recommendation** — target ≤ 90 seconds from first turn.
-- **Citizen Satisfaction (CSAT)** — post-conversation micro-survey. Target: ≥ 4.5/5.
-- **Partner Productivity** — citizens screened per volunteer-hour vs. manual baseline. Target: ≥ 5×.
-- **Consent Health** — % of sensitive-field reads with active consent. Target: 100%.
-- **Explanation Coverage** — % of recommendations with complete Explanation Envelope. Target: 100%.
+Each phase is confirmed with you before code lands. No phase leaves a broken UI behind.
+
+1. **Foundations** — design tokens, route shell, auth, empty citizen dashboard, public marketing routes, splash. *Deliverable:* click through every route, no dead ends.
+2. **Data + KB** — Cloud schema + RLS + seed of 25–30 schemes with rules. *Deliverable:* schemes queryable; rule engine unit-testable via seeded profiles.
+3. **AI Orchestrator (text-only)** — server-side orchestrator, Conversation + Profile + Scheme Intelligence + Eligibility agents, Explanation Envelope. AI Assistant screen runs on text. *Deliverable:* golden path works in text mode end-to-end.
+4. **Benefits, Scheme Details, Save flow** — Benefits Feed, Scheme Details with full envelope, save-to-dashboard. *Deliverable:* citizen can go conversation → save.
+5. **Family, Documents, Applications** — CRUD + status tracking + doc-linked schemes. *Deliverable:* full citizen product working.
+6. **Voice** — streaming STT + TTS, voice orb states, captions, language switch. *Deliverable:* golden path runs voice-first.
+7. **Opportunity Unlock + Memory polish** — proactive unlocks, recent activity, notifications. *Deliverable:* dashboard feels alive.
+8. **Partner surface** — dashboard, voice intake, citizen list, reports, impact. *Deliverable:* partner golden path works.
+9. **Stories + Polish** — 5 replayable journeys, motion, empty/error illustrations, a11y pass, responsive pass. *Deliverable:* demo-ready.
+10. **Hardening** — perf, error resilience, offline banner, final accessibility audit, seed data cleanup, demo script rehearsal.
+
+At any point, if a phase's Quality Bar isn't met, we stop and fix before moving on.
 
 ---
 
-## PART M — RISKS & MITIGATIONS
+## 12. Acceptance Tests (must all pass before we call MVP done)
+
+1. **Golden Path (voice)** — from `/` to a saved recommendation, spoken end-to-end, in under 3 minutes.
+2. **Golden Path (text)** — same as above with keyboard only, no mouse, no voice.
+3. **Screen-reader traversal** — VoiceOver / TalkBack completes the golden path with meaningful announcements.
+4. **Explanation coverage** — every recommendation surfaced in the app opens a complete Explanation Envelope.
+5. **Grounding audit** — no assistant message references a scheme name not present in the KB (script-checked against a seeded conversation set).
+6. **Consent audit** — no sensitive field is written without a matching consent row.
+7. **Role isolation** — partner_staff cannot read a non-assisted citizen; citizen cannot read another citizen; verified via automated policy tests.
+8. **Reduced motion** — all animations degrade to static or subtle fades under `prefers-reduced-motion`.
+9. **Dark mode parity** — golden path in dark mode has no contrast failures.
+10. **Offline behavior** — with network off, cached dashboard reads, and clear offline banner + retry.
+
+---
+
+## 13. Risks & Mitigations (MVP-specific)
 
 | Risk | Mitigation |
 |---|---|
-| LLM invents a scheme | Grounding check at Orchestrator blocks non-KB `scheme_id`s |
-| Rule interpretation drift | Deterministic Rules Engine; LLM only paraphrases |
-| Sensitive data over-collection | Consent gating + data minimization in prompts |
-| Language quality regressions | Golden-set evaluations per language per release |
-| Model outage | Provider gateway with fallback model per role |
-| KB staleness | Ingestion pipeline + review SLAs + freshness badge on cards |
-| Partner over-reach | Scope-bound `AssistedRelationship`s + audit surfaced to citizen |
-| Voice misrecognition of names/villages | Bias STT with location + user's known entities; confirm before writing |
-| Offline sync conflicts | Provenance + timestamp resolution; volunteer prompted for conflicts |
+| Voice latency undercuts wow-factor | Ship text-first in Phase 3, layer voice in Phase 6; degrade gracefully to text on failure |
+| KB seed too shallow to feel real | Anchor seed around 5 demo personas so every persona has ≥ 5 real eligible schemes |
+| LLM hallucination | Grounding check at Orchestrator; deterministic rules engine owns verdicts |
+| Scope creep from live demo feedback | This contract is the source of truth; changes require an explicit contract update |
+| Partner surface eating citizen polish time | Partner is Phase 8; if time-boxed, we ship citizen + stories + voice and defer partner Impact export |
+| STT quality on Hinglish | Ship English + Hindi at MVP; add languages post-MVP with dedicated golden sets |
 
 ---
 
-## PART N — DELIVERY CHECKLIST (for build phase)
+## 14. What "Done" Looks Like
 
-Before implementation begins, we will need concrete decisions on:
-1. Managed vs self-hosted STT/TTS + language coverage list.
-2. Provider gateway model choices per role (chat, extract, embed, STT, TTS).
-3. KB seed set: which 50–100 schemes ship at MVP, per pilot state.
-4. Consent copy per sensitive scope (legal + plain-language).
-5. Retention windows per data class (audio, transcripts, docs, PII).
-6. Reviewer workflow tooling for KB updates.
-7. Golden evaluation set per language + per persona.
+- The Golden Demo Path completes without a single failure, in voice and in text, on mobile and on desktop, in light and dark mode, with keyboard and with screen-reader.
+- Every screen listed in Phase 1 + Phase 3 meets the Quality Bar.
+- Every recommendation meets the Recommendation Bar.
+- 5 Citizen Stories are live and replayable.
+- Partner can run a Voice Intake and export a report.
+- No dead links, no fake buttons, no lorem ipsum, no broken states.
 
 ---
 
 ## Next Step
 
-Approve this AI & Data Architecture. On approval, we exit discovery and move to **Phase 1 build**: scaffolding the design system tokens, route shell, and the Orchestrator + Rules Engine contracts (still no user-facing UI on day one — foundations first). Each build phase will be scoped and confirmed with you before code lands.
+Approve this contract. On approval, we begin **Phase 1 (Foundations)** — design tokens, route shell, auth, empty citizen dashboard, public marketing routes, and splash — and confirm the working slice with you before moving to Phase 2.
