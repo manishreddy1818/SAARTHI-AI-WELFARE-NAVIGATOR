@@ -16,20 +16,10 @@ function LandingPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      const seen = window.sessionStorage.getItem("saarthi:splash");
-      if (!seen) setShowSplash(true);
-    } catch {
-      setShowSplash(true);
-    }
+    setShowSplash(true);
   }, []);
 
   const finishSplash = () => {
-    try {
-      window.sessionStorage.setItem("saarthi:splash", "1");
-    } catch {
-      // ignore
-    }
     setShowSplash(false);
   };
 
