@@ -22,6 +22,7 @@ import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCitizenRouteImport } from './routes/_authenticated/citizen'
 import { Route as AuthenticatedBenefitsRouteImport } from './routes/_authenticated/benefits'
 import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
+import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
 import { Route as AuthenticatedSchemesIdRouteImport } from './routes/_authenticated/schemes.$id'
 
 const StoriesRoute = StoriesRouteImport.update({
@@ -88,6 +89,12 @@ const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
   path: '/assistant',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedApplicationsRoute =
+  AuthenticatedApplicationsRouteImport.update({
+    id: '/applications',
+    path: '/applications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSchemesIdRoute = AuthenticatedSchemesIdRouteImport.update({
   id: '/schemes/$id',
   path: '/schemes/$id',
@@ -99,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/role-select': typeof RoleSelectRoute
   '/stories': typeof StoriesRoute
+  '/applications': typeof AuthenticatedApplicationsRoute
   '/assistant': typeof AuthenticatedAssistantRoute
   '/benefits': typeof AuthenticatedBenefitsRoute
   '/citizen': typeof AuthenticatedCitizenRoute
@@ -114,6 +122,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/role-select': typeof RoleSelectRoute
   '/stories': typeof StoriesRoute
+  '/applications': typeof AuthenticatedApplicationsRoute
   '/assistant': typeof AuthenticatedAssistantRoute
   '/benefits': typeof AuthenticatedBenefitsRoute
   '/citizen': typeof AuthenticatedCitizenRoute
@@ -131,6 +140,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/role-select': typeof RoleSelectRoute
   '/stories': typeof StoriesRoute
+  '/_authenticated/applications': typeof AuthenticatedApplicationsRoute
   '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/benefits': typeof AuthenticatedBenefitsRoute
   '/_authenticated/citizen': typeof AuthenticatedCitizenRoute
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/role-select'
     | '/stories'
+    | '/applications'
     | '/assistant'
     | '/benefits'
     | '/citizen'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/role-select'
     | '/stories'
+    | '/applications'
     | '/assistant'
     | '/benefits'
     | '/citizen'
@@ -179,6 +191,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/role-select'
     | '/stories'
+    | '/_authenticated/applications'
     | '/_authenticated/assistant'
     | '/_authenticated/benefits'
     | '/_authenticated/citizen'
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssistantRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/applications': {
+      id: '/_authenticated/applications'
+      path: '/applications'
+      fullPath: '/applications'
+      preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/schemes/$id': {
       id: '/_authenticated/schemes/$id'
       path: '/schemes/$id'
@@ -303,6 +323,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
   AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
   AuthenticatedBenefitsRoute: typeof AuthenticatedBenefitsRoute
   AuthenticatedCitizenRoute: typeof AuthenticatedCitizenRoute
@@ -314,6 +335,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedApplicationsRoute: AuthenticatedApplicationsRoute,
   AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
   AuthenticatedBenefitsRoute: AuthenticatedBenefitsRoute,
   AuthenticatedCitizenRoute: AuthenticatedCitizenRoute,
