@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiSttRouteImport } from './routes/api/stt'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
+import { Route as AuthenticatedFamilyRouteImport } from './routes/_authenticated/family'
 import { Route as AuthenticatedCitizenRouteImport } from './routes/_authenticated/citizen'
 import { Route as AuthenticatedBenefitsRouteImport } from './routes/_authenticated/benefits'
 import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
@@ -61,6 +62,11 @@ const AuthenticatedPartnerRoute = AuthenticatedPartnerRouteImport.update({
   path: '/partner',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFamilyRoute = AuthenticatedFamilyRouteImport.update({
+  id: '/family',
+  path: '/family',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCitizenRoute = AuthenticatedCitizenRouteImport.update({
   id: '/citizen',
   path: '/citizen',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/assistant': typeof AuthenticatedAssistantRoute
   '/benefits': typeof AuthenticatedBenefitsRoute
   '/citizen': typeof AuthenticatedCitizenRoute
+  '/family': typeof AuthenticatedFamilyRoute
   '/partner': typeof AuthenticatedPartnerRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/assistant': typeof AuthenticatedAssistantRoute
   '/benefits': typeof AuthenticatedBenefitsRoute
   '/citizen': typeof AuthenticatedCitizenRoute
+  '/family': typeof AuthenticatedFamilyRoute
   '/partner': typeof AuthenticatedPartnerRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/benefits': typeof AuthenticatedBenefitsRoute
   '/_authenticated/citizen': typeof AuthenticatedCitizenRoute
+  '/_authenticated/family': typeof AuthenticatedFamilyRoute
   '/_authenticated/partner': typeof AuthenticatedPartnerRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/benefits'
     | '/citizen'
+    | '/family'
     | '/partner'
     | '/profile'
     | '/api/stt'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/benefits'
     | '/citizen'
+    | '/family'
     | '/partner'
     | '/profile'
     | '/api/stt'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/_authenticated/assistant'
     | '/_authenticated/benefits'
     | '/_authenticated/citizen'
+    | '/_authenticated/family'
     | '/_authenticated/partner'
     | '/_authenticated/profile'
     | '/api/stt'
@@ -233,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPartnerRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/family': {
+      id: '/_authenticated/family'
+      path: '/family'
+      fullPath: '/family'
+      preLoaderRoute: typeof AuthenticatedFamilyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/citizen': {
       id: '/_authenticated/citizen'
       path: '/citizen'
@@ -268,6 +287,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
   AuthenticatedBenefitsRoute: typeof AuthenticatedBenefitsRoute
   AuthenticatedCitizenRoute: typeof AuthenticatedCitizenRoute
+  AuthenticatedFamilyRoute: typeof AuthenticatedFamilyRoute
   AuthenticatedPartnerRoute: typeof AuthenticatedPartnerRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSchemesIdRoute: typeof AuthenticatedSchemesIdRoute
@@ -277,6 +297,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
   AuthenticatedBenefitsRoute: AuthenticatedBenefitsRoute,
   AuthenticatedCitizenRoute: AuthenticatedCitizenRoute,
+  AuthenticatedFamilyRoute: AuthenticatedFamilyRoute,
   AuthenticatedPartnerRoute: AuthenticatedPartnerRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSchemesIdRoute: AuthenticatedSchemesIdRoute,
