@@ -26,6 +26,7 @@ import { Route as AuthenticatedAssistantRouteImport } from './routes/_authentica
 import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
 import { Route as AuthenticatedSchemesIdRouteImport } from './routes/_authenticated/schemes.$id'
 import { Route as AuthenticatedPartnerIntakeRouteImport } from './routes/_authenticated/partner.intake'
+import { Route as AuthenticatedPartnerCitizensRouteImport } from './routes/_authenticated/partner.citizens'
 
 const StoriesRoute = StoriesRouteImport.update({
   id: '/stories',
@@ -113,6 +114,12 @@ const AuthenticatedPartnerIntakeRoute =
     path: '/intake',
     getParentRoute: () => AuthenticatedPartnerRoute,
   } as any)
+const AuthenticatedPartnerCitizensRoute =
+  AuthenticatedPartnerCitizensRouteImport.update({
+    id: '/citizens',
+    path: '/citizens',
+    getParentRoute: () => AuthenticatedPartnerRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
   '/api/tts': typeof ApiTtsRoute
+  '/partner/citizens': typeof AuthenticatedPartnerCitizensRoute
   '/partner/intake': typeof AuthenticatedPartnerIntakeRoute
   '/schemes/$id': typeof AuthenticatedSchemesIdRoute
 }
@@ -147,6 +155,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
   '/api/tts': typeof ApiTtsRoute
+  '/partner/citizens': typeof AuthenticatedPartnerCitizensRoute
   '/partner/intake': typeof AuthenticatedPartnerIntakeRoute
   '/schemes/$id': typeof AuthenticatedSchemesIdRoute
 }
@@ -167,6 +176,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
   '/api/tts': typeof ApiTtsRoute
+  '/_authenticated/partner/citizens': typeof AuthenticatedPartnerCitizensRoute
   '/_authenticated/partner/intake': typeof AuthenticatedPartnerIntakeRoute
   '/_authenticated/schemes/$id': typeof AuthenticatedSchemesIdRoute
 }
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/api/stt'
     | '/api/tts'
+    | '/partner/citizens'
     | '/partner/intake'
     | '/schemes/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/api/stt'
     | '/api/tts'
+    | '/partner/citizens'
     | '/partner/intake'
     | '/schemes/$id'
   id:
@@ -224,6 +236,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/api/stt'
     | '/api/tts'
+    | '/_authenticated/partner/citizens'
     | '/_authenticated/partner/intake'
     | '/_authenticated/schemes/$id'
   fileRoutesById: FileRoutesById
@@ -359,14 +372,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPartnerIntakeRouteImport
       parentRoute: typeof AuthenticatedPartnerRoute
     }
+    '/_authenticated/partner/citizens': {
+      id: '/_authenticated/partner/citizens'
+      path: '/citizens'
+      fullPath: '/partner/citizens'
+      preLoaderRoute: typeof AuthenticatedPartnerCitizensRouteImport
+      parentRoute: typeof AuthenticatedPartnerRoute
+    }
   }
 }
 
 interface AuthenticatedPartnerRouteChildren {
+  AuthenticatedPartnerCitizensRoute: typeof AuthenticatedPartnerCitizensRoute
   AuthenticatedPartnerIntakeRoute: typeof AuthenticatedPartnerIntakeRoute
 }
 
 const AuthenticatedPartnerRouteChildren: AuthenticatedPartnerRouteChildren = {
+  AuthenticatedPartnerCitizensRoute: AuthenticatedPartnerCitizensRoute,
   AuthenticatedPartnerIntakeRoute: AuthenticatedPartnerIntakeRoute,
 }
 
