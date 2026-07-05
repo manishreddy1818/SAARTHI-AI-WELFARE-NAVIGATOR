@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { sendMessage, listConversations, getConversation, getProfile } from "@/lib/citizen.functions";
 import { toast } from "sonner";
 import { useSpeech } from "@/hooks/use-speech";
+import { VOICE_OPTIONS, ACCENT_OPTIONS } from "@/hooks/use-speech";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LifeEventsGrid } from "@/components/life-events";
 
 export const Route = createFileRoute("/_authenticated/assistant")({
@@ -41,7 +43,7 @@ function AssistantPage() {
   const [suggested, setSuggested] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { speak, stop, replay, muted, setMuted, speaking, loadingId } = useSpeech();
+  const { speak, stop, replay, muted, setMuted, speaking, loadingId, voice, setVoice, accent, setAccent } = useSpeech();
 
   const listConv = useServerFn(listConversations);
   const getConv = useServerFn(getConversation);
@@ -189,6 +191,26 @@ function AssistantPage() {
           <div className="flex items-center justify-between border-b border-border/60 px-4 py-2">
             <p className="text-xs uppercase tracking-widest text-muted-foreground">SAARTHI</p>
             <div className="flex items-center gap-1">
+              <Select value={accent} onValueChange={(v) => setAccent(v as any)}>
+                <SelectTrigger className="h-8 w-[130px] rounded-full text-xs">
+                  <SelectValue placeholder="Accent" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ACCENT_OPTIONS.map((a) => (
+                    <SelectItem key={a.id} value={a.id} className="text-xs">{a.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={voice} onValueChange={setVoice}>
+                <SelectTrigger className="h-8 w-[140px] rounded-full text-xs">
+                  <SelectValue placeholder="Voice" />
+                </SelectTrigger>
+                <SelectContent>
+                  {VOICE_OPTIONS.map((v) => (
+                    <SelectItem key={v.id} value={v.id} className="text-xs">{v.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {speaking && (
                 <Button variant="ghost" size="sm" className="h-8 rounded-full px-3 text-xs" onClick={stop}>
                   <Square className="mr-1 h-3 w-3" fill="currentColor" />
