@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { SchemeCard } from "@/components/scheme-card";
 import { AiSummaryCard, buildAiSummary } from "@/components/ai-summary-card";
 import { getPartnerCitizen, updateFollowUp } from "@/lib/partner.functions";
-import { StatusBadge } from "./partner";
+import { StatusBadge } from "@/components/partner-status-badge";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/partner/citizens/$id")({
