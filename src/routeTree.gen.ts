@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiSttRouteImport } from './routes/api/stt'
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
 import { Route as AuthenticatedCitizenRouteImport } from './routes/_authenticated/citizen'
+import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 
 const StoriesRoute = StoriesRouteImport.update({
   id: '/stories',
@@ -57,12 +58,18 @@ const AuthenticatedCitizenRoute = AuthenticatedCitizenRouteImport.update({
   path: '/citizen',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/role-select': typeof RoleSelectRoute
   '/stories': typeof StoriesRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/citizen': typeof AuthenticatedCitizenRoute
   '/partner': typeof AuthenticatedPartnerRoute
   '/api/stt': typeof ApiSttRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/role-select': typeof RoleSelectRoute
   '/stories': typeof StoriesRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/citizen': typeof AuthenticatedCitizenRoute
   '/partner': typeof AuthenticatedPartnerRoute
   '/api/stt': typeof ApiSttRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/role-select': typeof RoleSelectRoute
   '/stories': typeof StoriesRoute
+  '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/citizen': typeof AuthenticatedCitizenRoute
   '/_authenticated/partner': typeof AuthenticatedPartnerRoute
   '/api/stt': typeof ApiSttRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/role-select'
     | '/stories'
+    | '/assistant'
     | '/citizen'
     | '/partner'
     | '/api/stt'
@@ -103,6 +113,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/role-select'
     | '/stories'
+    | '/assistant'
     | '/citizen'
     | '/partner'
     | '/api/stt'
@@ -113,6 +124,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/role-select'
     | '/stories'
+    | '/_authenticated/assistant'
     | '/_authenticated/citizen'
     | '/_authenticated/partner'
     | '/api/stt'
@@ -185,15 +197,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCitizenRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/assistant': {
+      id: '/_authenticated/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AuthenticatedAssistantRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
   AuthenticatedCitizenRoute: typeof AuthenticatedCitizenRoute
   AuthenticatedPartnerRoute: typeof AuthenticatedPartnerRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
   AuthenticatedCitizenRoute: AuthenticatedCitizenRoute,
   AuthenticatedPartnerRoute: AuthenticatedPartnerRoute,
 }
