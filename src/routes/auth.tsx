@@ -38,6 +38,9 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
+  const [lastEmail, setLastEmail] = useState("");
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [resending, setResending] = useState(false);
 
   const defaultRedirect = role === "partner" ? "/partner" : "/citizen";
 
@@ -54,6 +57,7 @@ function AuthPage() {
   async function handleGoogle() {
     if (loading) return;
     setAuthMessage(null);
+    setNeedsConfirmation(false);
     setLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
@@ -75,6 +79,8 @@ function AuthPage() {
   async function handleEmail(mode: "signin" | "signup", email: string, password: string, name: string) {
     if (loading) return;
     setAuthMessage(null);
+    setNeedsConfirmation(false);
+    setLastEmail(email);
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -88,7 +94,8 @@ function AuthPage() {
         });
         if (error) throw error;
         if (!data.session) {
-          const message = "Account created. Please check your email to confirm it, then sign in.";
+          const message = "Account created. Please open the confirmation email we sent, then come back and sign in.";
+          setNeedsConfirmation(true);
           setAuthMessage(message);
           toast.success(message);
           return;
@@ -101,10 +108,35 @@ function AuthPage() {
       navigate({ to: safePath(redirect) ?? defaultRedirect, replace: true });
     } catch (e: any) {
       const message = friendlyAuthMessage(e, mode);
+      if (isEmailNotConfirmed(e)) setNeedsConfirmation(true);
       setAuthMessage(message);
       toast.error(message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResendConfirmation() {
+    if (!lastEmail || resending) return;
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: lastEmail,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      if (error) throw error;
+      const message = `Confirmation email sent again to ${lastEmail}. Please check inbox and spam.`;
+      setAuthMessage(message);
+      toast.success(message);
+    } catch (e: any) {
+      const message = e?.message?.toLowerCase?.().includes("rate")
+        ? "Please wait a minute before requesting another confirmation email."
+        : "Could not resend confirmation email. Please try again shortly.";
+      setAuthMessage(message);
+      toast.error(message);
+    } finally {
+      setResending(false);
     }
   }
 
@@ -156,7 +188,22 @@ function AuthPage() {
 
           {authMessage && (
             <Alert className="mb-5 border-[var(--trust)]/30 bg-[var(--trust)]/5">
-              <AlertDescription>{authMessage}</AlertDescription>
+              <AlertDescription className="space-y-3">
+                <p>{authMessage}</p>
+                {needsConfirmation && lastEmail && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
+                    disabled={resending}
+                    onClick={handleResendConfirmation}
+                  >
+                    {resending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+                    Resend confirmation email
+                  </Button>
+                )}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -277,13 +324,19 @@ function friendlyAuthMessage(error: any, mode: "signin" | "signup") {
   if (code.includes("user_already") || code.includes("email_exists") || raw.includes("already registered") || raw.includes("already exists")) {
     return "An account already exists with this email. Please use Sign in instead.";
   }
-  if (raw.includes("email not confirmed")) {
-    return "Please confirm your email first, then sign in again.";
+  if (isEmailNotConfirmed(error)) {
+    return "Your account exists, but email login is locked until you click the confirmation link in your email.";
   }
 
   return mode === "signup"
     ? "Could not create the account. Please check the details and try again."
     : "Could not sign in. Please check your email and password.";
+}
+
+function isEmailNotConfirmed(error: any) {
+  const code = String(error?.code ?? "").toLowerCase();
+  const raw = String(error?.message ?? "").toLowerCase();
+  return code.includes("email_not_confirmed") || raw.includes("email not confirmed");
 }
 
 function GoogleIcon({ className }: { className?: string }) {
