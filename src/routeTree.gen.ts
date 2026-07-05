@@ -27,6 +27,7 @@ import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authent
 import { Route as AuthenticatedSchemesIdRouteImport } from './routes/_authenticated/schemes.$id'
 import { Route as AuthenticatedPartnerIntakeRouteImport } from './routes/_authenticated/partner.intake'
 import { Route as AuthenticatedPartnerCitizensRouteImport } from './routes/_authenticated/partner.citizens'
+import { Route as AuthenticatedPartnerCitizensIdRouteImport } from './routes/_authenticated/partner.citizens.$id'
 
 const StoriesRoute = StoriesRouteImport.update({
   id: '/stories',
@@ -120,6 +121,12 @@ const AuthenticatedPartnerCitizensRoute =
     path: '/citizens',
     getParentRoute: () => AuthenticatedPartnerRoute,
   } as any)
+const AuthenticatedPartnerCitizensIdRoute =
+  AuthenticatedPartnerCitizensIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedPartnerCitizensRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -136,9 +143,10 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
   '/api/tts': typeof ApiTtsRoute
-  '/partner/citizens': typeof AuthenticatedPartnerCitizensRoute
+  '/partner/citizens': typeof AuthenticatedPartnerCitizensRouteWithChildren
   '/partner/intake': typeof AuthenticatedPartnerIntakeRoute
   '/schemes/$id': typeof AuthenticatedSchemesIdRoute
+  '/partner/citizens/$id': typeof AuthenticatedPartnerCitizensIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -155,9 +163,10 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
   '/api/tts': typeof ApiTtsRoute
-  '/partner/citizens': typeof AuthenticatedPartnerCitizensRoute
+  '/partner/citizens': typeof AuthenticatedPartnerCitizensRouteWithChildren
   '/partner/intake': typeof AuthenticatedPartnerIntakeRoute
   '/schemes/$id': typeof AuthenticatedSchemesIdRoute
+  '/partner/citizens/$id': typeof AuthenticatedPartnerCitizensIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -176,9 +185,10 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
   '/api/tts': typeof ApiTtsRoute
-  '/_authenticated/partner/citizens': typeof AuthenticatedPartnerCitizensRoute
+  '/_authenticated/partner/citizens': typeof AuthenticatedPartnerCitizensRouteWithChildren
   '/_authenticated/partner/intake': typeof AuthenticatedPartnerIntakeRoute
   '/_authenticated/schemes/$id': typeof AuthenticatedSchemesIdRoute
+  '/_authenticated/partner/citizens/$id': typeof AuthenticatedPartnerCitizensIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/partner/citizens'
     | '/partner/intake'
     | '/schemes/$id'
+    | '/partner/citizens/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/partner/citizens'
     | '/partner/intake'
     | '/schemes/$id'
+    | '/partner/citizens/$id'
   id:
     | '__root__'
     | '/'
@@ -239,6 +251,7 @@ export interface FileRouteTypes {
     | '/_authenticated/partner/citizens'
     | '/_authenticated/partner/intake'
     | '/_authenticated/schemes/$id'
+    | '/_authenticated/partner/citizens/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -379,16 +392,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPartnerCitizensRouteImport
       parentRoute: typeof AuthenticatedPartnerRoute
     }
+    '/_authenticated/partner/citizens/$id': {
+      id: '/_authenticated/partner/citizens/$id'
+      path: '/$id'
+      fullPath: '/partner/citizens/$id'
+      preLoaderRoute: typeof AuthenticatedPartnerCitizensIdRouteImport
+      parentRoute: typeof AuthenticatedPartnerCitizensRoute
+    }
   }
 }
 
+interface AuthenticatedPartnerCitizensRouteChildren {
+  AuthenticatedPartnerCitizensIdRoute: typeof AuthenticatedPartnerCitizensIdRoute
+}
+
+const AuthenticatedPartnerCitizensRouteChildren: AuthenticatedPartnerCitizensRouteChildren =
+  {
+    AuthenticatedPartnerCitizensIdRoute: AuthenticatedPartnerCitizensIdRoute,
+  }
+
+const AuthenticatedPartnerCitizensRouteWithChildren =
+  AuthenticatedPartnerCitizensRoute._addFileChildren(
+    AuthenticatedPartnerCitizensRouteChildren,
+  )
+
 interface AuthenticatedPartnerRouteChildren {
-  AuthenticatedPartnerCitizensRoute: typeof AuthenticatedPartnerCitizensRoute
+  AuthenticatedPartnerCitizensRoute: typeof AuthenticatedPartnerCitizensRouteWithChildren
   AuthenticatedPartnerIntakeRoute: typeof AuthenticatedPartnerIntakeRoute
 }
 
 const AuthenticatedPartnerRouteChildren: AuthenticatedPartnerRouteChildren = {
-  AuthenticatedPartnerCitizensRoute: AuthenticatedPartnerCitizensRoute,
+  AuthenticatedPartnerCitizensRoute:
+    AuthenticatedPartnerCitizensRouteWithChildren,
   AuthenticatedPartnerIntakeRoute: AuthenticatedPartnerIntakeRoute,
 }
 
