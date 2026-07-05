@@ -14,6 +14,7 @@ import { Route as RoleSelectRouteImport } from './routes/role-select'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as ApiSttRouteImport } from './routes/api/stt'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
@@ -47,6 +48,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTtsRoute = ApiTtsRouteImport.update({
+  id: '/api/tts',
+  path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSttRoute = ApiSttRouteImport.update({
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/partner': typeof AuthenticatedPartnerRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
+  '/api/tts': typeof ApiTtsRoute
   '/schemes/$id': typeof AuthenticatedSchemesIdRoute
 }
 export interface FileRoutesByTo {
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/partner': typeof AuthenticatedPartnerRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
+  '/api/tts': typeof ApiTtsRoute
   '/schemes/$id': typeof AuthenticatedSchemesIdRoute
 }
 export interface FileRoutesById {
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/_authenticated/partner': typeof AuthenticatedPartnerRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
+  '/api/tts': typeof ApiTtsRoute
   '/_authenticated/schemes/$id': typeof AuthenticatedSchemesIdRoute
 }
 export interface FileRouteTypes {
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/partner'
     | '/profile'
     | '/api/stt'
+    | '/api/tts'
     | '/schemes/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/partner'
     | '/profile'
     | '/api/stt'
+    | '/api/tts'
     | '/schemes/$id'
   id:
     | '__root__'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/_authenticated/partner'
     | '/_authenticated/profile'
     | '/api/stt'
+    | '/api/tts'
     | '/_authenticated/schemes/$id'
   fileRoutesById: FileRoutesById
 }
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   RoleSelectRoute: typeof RoleSelectRoute
   StoriesRoute: typeof StoriesRoute
   ApiSttRoute: typeof ApiSttRoute
+  ApiTtsRoute: typeof ApiTtsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tts': {
+      id: '/api/tts'
+      path: '/api/tts'
+      fullPath: '/api/tts'
+      preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/stt': {
@@ -356,6 +376,7 @@ const rootRouteChildren: RootRouteChildren = {
   RoleSelectRoute: RoleSelectRoute,
   StoriesRoute: StoriesRoute,
   ApiSttRoute: ApiSttRoute,
+  ApiTtsRoute: ApiTtsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
