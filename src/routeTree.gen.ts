@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiSttRouteImport } from './routes/api/stt'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
 import { Route as AuthenticatedCitizenRouteImport } from './routes/_authenticated/citizen'
 import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
@@ -48,6 +49,11 @@ const ApiSttRoute = ApiSttRouteImport.update({
   path: '/api/stt',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPartnerRoute = AuthenticatedPartnerRouteImport.update({
   id: '/partner',
   path: '/partner',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/assistant': typeof AuthenticatedAssistantRoute
   '/citizen': typeof AuthenticatedCitizenRoute
   '/partner': typeof AuthenticatedPartnerRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
 }
 export interface FileRoutesByTo {
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/assistant': typeof AuthenticatedAssistantRoute
   '/citizen': typeof AuthenticatedCitizenRoute
   '/partner': typeof AuthenticatedPartnerRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
 }
 export interface FileRoutesById {
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/citizen': typeof AuthenticatedCitizenRoute
   '/_authenticated/partner': typeof AuthenticatedPartnerRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/api/stt': typeof ApiSttRoute
 }
 export interface FileRouteTypes {
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/citizen'
     | '/partner'
+    | '/profile'
     | '/api/stt'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/citizen'
     | '/partner'
+    | '/profile'
     | '/api/stt'
   id:
     | '__root__'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/_authenticated/assistant'
     | '/_authenticated/citizen'
     | '/_authenticated/partner'
+    | '/_authenticated/profile'
     | '/api/stt'
   fileRoutesById: FileRoutesById
 }
@@ -183,6 +195,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSttRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/partner': {
       id: '/_authenticated/partner'
       path: '/partner'
@@ -211,12 +230,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
   AuthenticatedCitizenRoute: typeof AuthenticatedCitizenRoute
   AuthenticatedPartnerRoute: typeof AuthenticatedPartnerRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
   AuthenticatedCitizenRoute: AuthenticatedCitizenRoute,
   AuthenticatedPartnerRoute: AuthenticatedPartnerRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
