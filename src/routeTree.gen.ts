@@ -33,6 +33,7 @@ import { Route as AuthenticatedSchemesIdRouteImport } from './routes/_authentica
 import { Route as AuthenticatedPartnerIntakeRouteImport } from './routes/_authenticated/partner.intake'
 import { Route as AuthenticatedPartnerCitizensRouteImport } from './routes/_authenticated/partner.citizens'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedPartnerCitizensIdRouteImport } from './routes/_authenticated/partner.citizens.$id'
 
 const StoriesRoute = StoriesRouteImport.update({
@@ -161,6 +162,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPartnerCitizensIdRoute =
   AuthenticatedPartnerCitizensIdRouteImport.update({
     id: '/$id',
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/api/stt': typeof ApiSttRoute
   '/api/tts': typeof ApiTtsRoute
   '/stories/$slug': typeof StoriesSlugRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/partner/citizens': typeof AuthenticatedPartnerCitizensRouteWithChildren
   '/partner/intake': typeof AuthenticatedPartnerIntakeRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/api/stt': typeof ApiSttRoute
   '/api/tts': typeof ApiTtsRoute
   '/stories/$slug': typeof StoriesSlugRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/partner/citizens': typeof AuthenticatedPartnerCitizensRouteWithChildren
   '/partner/intake': typeof AuthenticatedPartnerIntakeRoute
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/api/stt': typeof ApiSttRoute
   '/api/tts': typeof ApiTtsRoute
   '/stories/$slug': typeof StoriesSlugRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/partner/citizens': typeof AuthenticatedPartnerCitizensRouteWithChildren
   '/_authenticated/partner/intake': typeof AuthenticatedPartnerIntakeRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/api/stt'
     | '/api/tts'
     | '/stories/$slug'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/partner/citizens'
     | '/partner/intake'
@@ -293,6 +303,7 @@ export interface FileRouteTypes {
     | '/api/stt'
     | '/api/tts'
     | '/stories/$slug'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/partner/citizens'
     | '/partner/intake'
@@ -320,6 +331,7 @@ export interface FileRouteTypes {
     | '/api/stt'
     | '/api/tts'
     | '/stories/$slug'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/partner/citizens'
     | '/_authenticated/partner/intake'
@@ -339,6 +351,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiSttRoute: typeof ApiSttRoute
   ApiTtsRoute: typeof ApiTtsRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
@@ -512,6 +525,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/partner/citizens/$id': {
       id: '/_authenticated/partner/citizens/$id'
       path: '/$id'
@@ -602,6 +622,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiSttRoute: ApiSttRoute,
   ApiTtsRoute: ApiTtsRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport
