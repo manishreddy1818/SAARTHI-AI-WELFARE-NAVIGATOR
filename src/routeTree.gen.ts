@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StoriesRouteImport } from './routes/stories'
 import { Route as RoleSelectRouteImport } from './routes/role-select'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -25,10 +26,14 @@ import { Route as AuthenticatedCitizenRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedBenefitsRouteImport } from './routes/_authenticated/benefits'
 import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedPartnerIndexRouteImport } from './routes/_authenticated/partner.index'
 import { Route as AuthenticatedSchemesIdRouteImport } from './routes/_authenticated/schemes.$id'
 import { Route as AuthenticatedPartnerIntakeRouteImport } from './routes/_authenticated/partner.intake'
 import { Route as AuthenticatedPartnerCitizensRouteImport } from './routes/_authenticated/partner.citizens'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedPartnerCitizensIdRouteImport } from './routes/_authenticated/partner.citizens.$id'
 
 const StoriesRoute = StoriesRouteImport.update({
@@ -39,6 +44,11 @@ const StoriesRoute = StoriesRouteImport.update({
 const RoleSelectRoute = RoleSelectRouteImport.update({
   id: '/role-select',
   path: '/role-select',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -111,6 +121,18 @@ const AuthenticatedApplicationsRoute =
     path: '/applications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedPartnerIndexRoute =
   AuthenticatedPartnerIndexRouteImport.update({
     id: '/',
@@ -134,6 +156,17 @@ const AuthenticatedPartnerCitizensRoute =
     path: '/citizens',
     getParentRoute: () => AuthenticatedPartnerRoute,
   } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPartnerCitizensIdRoute =
   AuthenticatedPartnerCitizensIdRouteImport.update({
     id: '/$id',
@@ -144,8 +177,11 @@ const AuthenticatedPartnerCitizensIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
   '/role-select': typeof RoleSelectRoute
   '/stories': typeof StoriesRouteWithChildren
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/applications': typeof AuthenticatedApplicationsRoute
   '/assistant': typeof AuthenticatedAssistantRoute
   '/benefits': typeof AuthenticatedBenefitsRoute
@@ -157,6 +193,8 @@ export interface FileRoutesByFullPath {
   '/api/stt': typeof ApiSttRoute
   '/api/tts': typeof ApiTtsRoute
   '/stories/$slug': typeof StoriesSlugRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/partner/citizens': typeof AuthenticatedPartnerCitizensRouteWithChildren
   '/partner/intake': typeof AuthenticatedPartnerIntakeRoute
   '/schemes/$id': typeof AuthenticatedSchemesIdRoute
@@ -166,8 +204,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
   '/role-select': typeof RoleSelectRoute
   '/stories': typeof StoriesRouteWithChildren
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/applications': typeof AuthenticatedApplicationsRoute
   '/assistant': typeof AuthenticatedAssistantRoute
   '/benefits': typeof AuthenticatedBenefitsRoute
@@ -178,6 +219,8 @@ export interface FileRoutesByTo {
   '/api/stt': typeof ApiSttRoute
   '/api/tts': typeof ApiTtsRoute
   '/stories/$slug': typeof StoriesSlugRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/partner/citizens': typeof AuthenticatedPartnerCitizensRouteWithChildren
   '/partner/intake': typeof AuthenticatedPartnerIntakeRoute
   '/schemes/$id': typeof AuthenticatedSchemesIdRoute
@@ -189,8 +232,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
   '/role-select': typeof RoleSelectRoute
   '/stories': typeof StoriesRouteWithChildren
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/applications': typeof AuthenticatedApplicationsRoute
   '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/benefits': typeof AuthenticatedBenefitsRoute
@@ -202,6 +248,8 @@ export interface FileRoutesById {
   '/api/stt': typeof ApiSttRoute
   '/api/tts': typeof ApiTtsRoute
   '/stories/$slug': typeof StoriesSlugRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/partner/citizens': typeof AuthenticatedPartnerCitizensRouteWithChildren
   '/_authenticated/partner/intake': typeof AuthenticatedPartnerIntakeRoute
   '/_authenticated/schemes/$id': typeof AuthenticatedSchemesIdRoute
@@ -213,8 +261,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/mcp'
     | '/role-select'
     | '/stories'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/applications'
     | '/assistant'
     | '/benefits'
@@ -226,6 +277,8 @@ export interface FileRouteTypes {
     | '/api/stt'
     | '/api/tts'
     | '/stories/$slug'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/partner/citizens'
     | '/partner/intake'
     | '/schemes/$id'
@@ -235,8 +288,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/mcp'
     | '/role-select'
     | '/stories'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/applications'
     | '/assistant'
     | '/benefits'
@@ -247,6 +303,8 @@ export interface FileRouteTypes {
     | '/api/stt'
     | '/api/tts'
     | '/stories/$slug'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/partner/citizens'
     | '/partner/intake'
     | '/schemes/$id'
@@ -257,8 +315,11 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/mcp'
     | '/role-select'
     | '/stories'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/applications'
     | '/_authenticated/assistant'
     | '/_authenticated/benefits'
@@ -270,6 +331,8 @@ export interface FileRouteTypes {
     | '/api/stt'
     | '/api/tts'
     | '/stories/$slug'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/partner/citizens'
     | '/_authenticated/partner/intake'
     | '/_authenticated/schemes/$id'
@@ -281,10 +344,15 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  McpRoute: typeof McpRoute
   RoleSelectRoute: typeof RoleSelectRoute
   StoriesRoute: typeof StoriesRouteWithChildren
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiSttRoute: typeof ApiSttRoute
   ApiTtsRoute: typeof ApiTtsRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -301,6 +369,13 @@ declare module '@tanstack/react-router' {
       path: '/role-select'
       fullPath: '/role-select'
       preLoaderRoute: typeof RoleSelectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -401,6 +476,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/partner/': {
       id: '/_authenticated/partner/'
       path: '/'
@@ -428,6 +517,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/partner/citizens'
       preLoaderRoute: typeof AuthenticatedPartnerCitizensRouteImport
       parentRoute: typeof AuthenticatedPartnerRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/partner/citizens/$id': {
       id: '/_authenticated/partner/citizens/$id'
@@ -511,10 +614,16 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  McpRoute: McpRoute,
   RoleSelectRoute: RoleSelectRoute,
   StoriesRoute: StoriesRouteWithChildren,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiSttRoute: ApiSttRoute,
   ApiTtsRoute: ApiTtsRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

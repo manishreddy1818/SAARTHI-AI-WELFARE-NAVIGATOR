@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://pmkatudplrfiaxnsvdpk.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "saarthi-mcp",
+      "version": "0.1.0",
+      "title": "SAARTHI Welfare Navigator"
+    },
+    "tools": [
+      {
+        "name": "get_profile",
+        "title": "Get my SAARTHI profile",
+        "description": "Return the signed-in citizen's SAARTHI profile (age, gender, state, occupation, income, category, household, disability, profile completeness).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_recommendations",
+        "title": "List recommended welfare schemes",
+        "description": "Return welfare schemes the signed-in citizen may qualify for, ranked by the SAARTHI rules engine using their profile and family details.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 10,
+              "description": "Max schemes to return (1-20)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_applications",
+        "title": "List my scheme applications",
+        "description": "Return the signed-in citizen's saved welfare-scheme applications with their status (saved, in_progress, submitted, approved, rejected).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
