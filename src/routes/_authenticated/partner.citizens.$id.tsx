@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { SchemeCard } from "@/components/scheme-card";
 import { AiSummaryCard, buildAiSummary } from "@/components/ai-summary-card";
 import { WelfareReport } from "@/components/welfare-report";
+import { RecoveryState } from "@/components/recovery-state";
 import {
   deletePartnerCitizen,
   getPartnerCitizen,
@@ -244,9 +245,15 @@ function CitizenDetail() {
             Recommended schemes
           </h2>
           {recs.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-              Add more profile details to unlock recommendations.
-            </div>
+            <RecoveryState
+              kind="missing-profile"
+              title="Add more profile details"
+              hint="Fill in age, income, occupation and location so we can match this citizen with the right schemes."
+              primaryHref="/partner/citizens"
+              primaryLabel="Edit intake"
+              secondaryHref="/partner"
+              secondaryLabel="Back to portal"
+            />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {recs.map((r: any, i: number) => (
