@@ -1,0 +1,3 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.partner_citizens ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.partner_citizen_family ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT false;

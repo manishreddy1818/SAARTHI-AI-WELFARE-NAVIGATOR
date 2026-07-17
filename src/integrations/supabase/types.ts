@@ -200,6 +200,7 @@ export type Database = {
           gender: string | null
           has_disability: boolean | null
           id: string
+          is_demo: boolean
           monthly_income: number | null
           name: string
           notes: string | null
@@ -214,6 +215,7 @@ export type Database = {
           gender?: string | null
           has_disability?: boolean | null
           id?: string
+          is_demo?: boolean
           monthly_income?: number | null
           name: string
           notes?: string | null
@@ -228,6 +230,7 @@ export type Database = {
           gender?: string | null
           has_disability?: boolean | null
           id?: string
+          is_demo?: boolean
           monthly_income?: number | null
           name?: string
           notes?: string | null
@@ -261,6 +264,7 @@ export type Database = {
           household_size: number | null
           household_type: string | null
           id: string
+          is_demo: boolean
           last_activity_at: string
           marital_status: string | null
           mobile: string | null
@@ -288,6 +292,7 @@ export type Database = {
           household_size?: number | null
           household_type?: string | null
           id?: string
+          is_demo?: boolean
           last_activity_at?: string
           marital_status?: string | null
           mobile?: string | null
@@ -315,6 +320,7 @@ export type Database = {
           household_size?: number | null
           household_type?: string | null
           id?: string
+          is_demo?: boolean
           last_activity_at?: string
           marital_status?: string | null
           mobile?: string | null
@@ -343,6 +349,7 @@ export type Database = {
           household_size: number | null
           household_type: string | null
           id: string
+          is_demo: boolean
           journey: string | null
           large_text: boolean
           marital_status: string | null
@@ -368,6 +375,7 @@ export type Database = {
           household_size?: number | null
           household_type?: string | null
           id: string
+          is_demo?: boolean
           journey?: string | null
           large_text?: boolean
           marital_status?: string | null
@@ -393,6 +401,7 @@ export type Database = {
           household_size?: number | null
           household_type?: string | null
           id?: string
+          is_demo?: boolean
           journey?: string | null
           large_text?: boolean
           marital_status?: string | null
