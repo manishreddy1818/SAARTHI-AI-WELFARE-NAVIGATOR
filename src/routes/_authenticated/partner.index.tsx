@@ -15,7 +15,15 @@ import { PageShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { listPartnerCitizens, partnerStats } from "@/lib/partner.functions";
 import { StatusBadge } from "@/components/partner-status-badge";
-import { PartnerDecisionDashboard } from "@/components/partner-decision-dashboard";
+import { lazy, Suspense } from "react";
+
+// Decision dashboard runs a per-citizen scorer over the followups list;
+// lazy-load so the initial partner-home paint is faster.
+const PartnerDecisionDashboard = lazy(() =>
+  import("@/components/partner-decision-dashboard").then((m) => ({
+    default: m.PartnerDecisionDashboard,
+  })),
+);
 
 export const Route = createFileRoute("/_authenticated/partner/")({
   head: () => ({
@@ -86,7 +94,9 @@ function PartnerDashboard() {
 
         {allCitizens.length > 0 && (
           <div className="mt-8">
-            <PartnerDecisionDashboard citizens={allCitizens} />
+            <Suspense fallback={null}>
+              <PartnerDecisionDashboard citizens={allCitizens} />
+            </Suspense>
           </div>
         )}
 
