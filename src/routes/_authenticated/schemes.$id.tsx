@@ -249,12 +249,33 @@ function SchemeDetail() {
 
           <Envelope title="Required documents" icon={FileText} accent="var(--trust)">
             <ul className="space-y-2 text-sm">
-              {(s.required_documents ?? []).map((d: string) => (
-                <li key={d} className="flex items-start gap-2">
-                  <FileText className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  {d}
+              {(s.required_documents ?? []).map((d: string) => {
+                const has = availableDocs.has(d.trim().toLowerCase());
+                return (
+                  <li key={d} className="flex items-start justify-between gap-2">
+                    <span className="flex items-start gap-2">
+                      <FileText className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                      <span>{d}</span>
+                    </span>
+                    {has ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[color-mix(in_oklch,var(--success)_15%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--success)]">
+                        <Check className="h-3 w-3" /> You have it
+                      </span>
+                    ) : (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                        <X className="h-3 w-3" /> Missing
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+              {(s.required_documents ?? []).length > 0 && (
+                <li className="pt-1">
+                  <Link to="/documents" className="text-xs font-medium text-[var(--trust)] hover:underline">
+                    Manage your documents →
+                  </Link>
                 </li>
-              ))}
+              )}
             </ul>
           </Envelope>
 
