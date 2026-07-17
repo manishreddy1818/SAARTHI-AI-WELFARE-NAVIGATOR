@@ -324,7 +324,8 @@ function AssistantPage() {
               type="submit"
               disabled={busy || !input.trim()}
               size="icon"
-              className="h-12 w-12 rounded-full"
+              aria-label="Send message"
+              className="h-12 w-12 min-h-11 min-w-11 rounded-full"
             >
               {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </Button>
