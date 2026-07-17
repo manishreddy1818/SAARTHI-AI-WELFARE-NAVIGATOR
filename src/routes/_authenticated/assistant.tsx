@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
 import { Loader2, RotateCcw, Send, Sparkles, Square, Trash2, Volume2, VolumeX } from "lucide-react";
 import { PageShell } from "@/components/app-shell";
+import { AnalyzingSteps, CHAT_THINKING_STEPS } from "@/components/analyzing-steps";
 import { VoiceOrb } from "@/components/voice-orb";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -384,7 +385,7 @@ function Bubble({ m, busy }: { m: Msg; busy: boolean }) {
         {isUser ? (
           <p className="whitespace-pre-wrap">{m.content}</p>
         ) : busy && m.content.startsWith("…") ? (
-          <ThinkingDots />
+          <ThinkingTrace />
         ) : (
           <div className="prose prose-sm max-w-none [&>*]:my-2 [&_p]:my-2 [&_ul]:my-2">
             <ReactMarkdown>{m.content}</ReactMarkdown>
@@ -395,13 +396,16 @@ function Bubble({ m, busy }: { m: Msg; busy: boolean }) {
   );
 }
 
-function ThinkingDots() {
+function ThinkingTrace() {
   return (
-    <span className="inline-flex items-center gap-1 text-muted-foreground">
-      <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]" />
-      <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]" />
-      <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" />
-      <span className="ml-2 text-xs">SAARTHI is thinking</span>
-    </span>
+    <div className="space-y-2 rounded-2xl bg-secondary/40 px-3 py-2.5">
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]" />
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]" />
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground" />
+        <span className="ml-1">SAARTHI is thinking</span>
+      </span>
+      <AnalyzingSteps active compact steps={CHAT_THINKING_STEPS} intervalMs={700} />
+    </div>
   );
 }
