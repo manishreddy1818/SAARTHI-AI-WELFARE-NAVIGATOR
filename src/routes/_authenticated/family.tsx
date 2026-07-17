@@ -107,7 +107,13 @@ function FamilyPage() {
                     </div>
                     <div className="flex gap-1">
                       <Button size="sm" variant="ghost" onClick={() => { setEditing(m); setOpen(true); }}>Edit</Button>
-                      <Button size="icon" variant="ghost" onClick={() => delMut.mutate(m.id)}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label={`Remove ${m.name}`}
+                        className="min-h-11 min-w-11"
+                        onClick={() => delMut.mutate(m.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

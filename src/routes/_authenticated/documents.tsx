@@ -114,7 +114,15 @@ function DocumentsPage() {
                   </div>
                   <div className="flex gap-1">
                     <Button size="sm" variant="ghost" onClick={() => { setEditing(d); setOpen(true); }}>Edit</Button>
-                    <Button size="icon" variant="ghost" onClick={() => delMut.mutate(d.id)}><Trash2 className="h-4 w-4" /></Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={`Remove ${d.label}`}
+                      className="min-h-11 min-w-11"
+                      onClick={() => delMut.mutate(d.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </li>
               ))}
