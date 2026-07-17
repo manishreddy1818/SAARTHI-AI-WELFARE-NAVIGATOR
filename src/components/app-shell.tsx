@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand";
 import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
+import { DemoBadge } from "@/components/demo-badge";
 
 export function AppHeader() {
   const { user, loading } = useAuth();
@@ -50,7 +51,10 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <BrandLogo />
+        <div className="flex items-center gap-3">
+          <BrandLogo />
+          {user && <DemoBadge />}
+        </div>
         <nav className="flex items-center gap-1 sm:gap-2">
           {links.map((l) => (
             <Link
