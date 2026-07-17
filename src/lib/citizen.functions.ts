@@ -302,6 +302,29 @@ function buildProfileSummary(p: any) {
   return `Known profile: ${bits.length ? bits.join(", ") : "(nothing yet)"}`;
 }
 
+function buildFamilySummary(members: any[] | null | undefined) {
+  if (!members || members.length === 0) return "Family on record: (none shared yet)";
+  const bits = members.slice(0, 8).map((m) => {
+    const parts: string[] = [];
+    if (m.name) parts.push(String(m.name));
+    if (m.relationship) parts.push(`(${m.relationship})`);
+    if (m.age != null) parts.push(`age ${m.age}`);
+    if (m.occupation) parts.push(String(m.occupation));
+    if (m.has_disability) parts.push("has disability");
+    return parts.join(" ");
+  });
+  return `Family on record: ${bits.join("; ")}`;
+}
+
+function buildApplicationsSummary(apps: any[] | null | undefined) {
+  if (!apps || apps.length === 0) return "Applications so far: (none)";
+  const bits = apps.slice(0, 6).map((a) => {
+    const name = a.schemes?.name ?? a.scheme_id ?? "scheme";
+    return `${name}: ${a.status ?? "in progress"}`;
+  });
+  return `Applications so far: ${bits.join("; ")}`;
+}
+
 export const sendMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) => sendMessageInput.parse(v))
@@ -327,7 +350,7 @@ export const sendMessage = createServerFn({ method: "POST" })
     });
 
     // 3. Load history + profile
-    const [{ data: history }, { data: profile }] = await Promise.all([
+    const [{ data: history }, { data: profile }, { data: family }, { data: apps }] = await Promise.all([
       context.supabase
         .from("chat_messages")
         .select("role, content")
@@ -335,11 +358,20 @@ export const sendMessage = createServerFn({ method: "POST" })
         .order("created_at", { ascending: true })
         .limit(30),
       context.supabase.from("profiles").select("*").eq("id", context.userId).maybeSingle(),
+      context.supabase.from("family_members").select("*").eq("user_id", context.userId),
+      context.supabase
+        .from("applications")
+        .select("scheme_id, status, updated_at, schemes(name)")
+        .eq("user_id", context.userId)
+        .order("updated_at", { ascending: false })
+        .limit(6),
     ]);
 
     const messages: ChatTurn[] = [
       { role: "system", content: SYSTEM_PROMPT },
       { role: "system", content: buildProfileSummary(profile) },
+      { role: "system", content: buildFamilySummary(family as any[] | null) },
+      { role: "system", content: buildApplicationsSummary(apps as any[] | null) },
       ...((history ?? []).map((m) => ({
         role: (m.role === "assistant" ? "assistant" : "user") as "user" | "assistant",
         content: m.content as string,
