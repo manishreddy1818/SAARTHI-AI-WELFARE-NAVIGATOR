@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Check, Loader2, Sparkles } from "lucide-react";
 
-const STEPS = [
+const DEFAULT_STEPS = [
   "Building citizen profile",
   "Searching central schemes",
   "Searching state schemes",
@@ -10,17 +10,26 @@ const STEPS = [
   "Preparing recommendations",
 ];
 
-/** Cinematic "SAARTHI is thinking" progress. Purely visual — appears while `active` is true. */
+/**
+ * Cinematic "SAARTHI is thinking" progress. Purely visual — appears while
+ * `active` is true. Stages are labelled after the *real* backend pipeline so
+ * the trace feels event-driven even when running client-side.
+ */
 export function AnalyzingSteps({
   active,
   onDone,
   intervalMs = 550,
+  steps,
+  compact = false,
 }: {
   active: boolean;
   onDone?: () => void;
   intervalMs?: number;
+  steps?: string[];
+  compact?: boolean;
 }) {
   const [idx, setIdx] = useState(0);
+  const STEPS = steps ?? DEFAULT_STEPS;
 
   useEffect(() => {
     if (!active) return;
@@ -36,9 +45,47 @@ export function AnalyzingSteps({
       });
     }, intervalMs);
     return () => clearInterval(t);
-  }, [active, intervalMs, onDone]);
+  }, [active, intervalMs, onDone, STEPS.length]);
 
   if (!active) return null;
+
+  if (compact) {
+    return (
+      <ol className="space-y-1.5">
+        {STEPS.map((s, i) => {
+          const done = i < idx;
+          const current = i === idx;
+          return (
+            <li
+              key={s}
+              className={`flex items-center gap-2 text-xs transition-all ${
+                done ? "text-foreground" : current ? "text-foreground" : "text-muted-foreground/60"
+              }`}
+            >
+              <span
+                className={`inline-flex h-4 w-4 items-center justify-center rounded-full transition-colors ${
+                  done
+                    ? "bg-[var(--success,theme(colors.emerald.500))] text-white"
+                    : current
+                    ? "bg-[var(--trust)] text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {done ? (
+                  <Check className="h-2.5 w-2.5" />
+                ) : current ? (
+                  <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                ) : (
+                  <span className="text-[8px]">{i + 1}</span>
+                )}
+              </span>
+              <span className={current ? "font-medium" : ""}>{s}</span>
+            </li>
+          );
+        })}
+      </ol>
+    );
+  }
 
   return (
     <div className="rounded-3xl border border-border/70 bg-card p-6 shadow-sm">
@@ -98,3 +145,11 @@ export function AnalyzingSteps({
     </div>
   );
 }
+
+/** Real backend milestones for a single chat turn. Keep in sync with sendMessage. */
+export const CHAT_THINKING_STEPS = [
+  "Reading your profile",
+  "Reviewing family & applications",
+  "Consulting SAARTHI",
+  "Preparing your reply",
+];
