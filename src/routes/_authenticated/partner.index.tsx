@@ -94,7 +94,9 @@ function PartnerDashboard() {
 
         {allCitizens.length > 0 && (
           <div className="mt-8">
-            <PartnerDecisionDashboard citizens={allCitizens} />
+            <Suspense fallback={null}>
+              <PartnerDecisionDashboard citizens={allCitizens} />
+            </Suspense>
           </div>
         )}
 
