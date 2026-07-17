@@ -6,6 +6,7 @@ import { Sparkles } from "lucide-react";
 import { PageShell } from "@/components/app-shell";
 import { SchemeCard } from "@/components/scheme-card";
 import { AiSummaryCard, buildAiSummary } from "@/components/ai-summary-card";
+import { OpportunityUnlockCard, buildOpportunities } from "@/components/opportunity-unlock";
 import { AnalyzingSteps } from "@/components/analyzing-steps";
 import { getRecommendations, listFamily } from "@/lib/citizen.functions";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,10 @@ function BenefitsPage() {
     q.data?.recommendations && q.data.recommendations.length
       ? buildAiSummary(q.data.recommendations as any, famQ.data?.length ?? 0)
       : null;
+  const opportunities =
+    q.data?.recommendations && q.data.recommendations.length
+      ? buildOpportunities(q.data.recommendations as any)
+      : [];
 
   return (
     <PageShell>
@@ -72,6 +77,9 @@ function BenefitsPage() {
           ) : !analyzing && q.data ? (
             <>
               {summary && <AiSummaryCard summary={summary} />}
+              {opportunities.length > 0 && (
+                <OpportunityUnlockCard opportunities={opportunities} />
+              )}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {q.data.recommendations.map((r: any, i: number) => (
                   <SchemeCard key={`${r.scheme.id}-${i}`} rec={r} />
