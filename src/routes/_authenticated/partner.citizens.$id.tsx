@@ -21,8 +21,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SchemeCard } from "@/components/scheme-card";
 import { AiSummaryCard, buildAiSummary } from "@/components/ai-summary-card";
-import { WelfareReport } from "@/components/welfare-report";
+import { lazy, Suspense } from "react";
 import { RecoveryState } from "@/components/recovery-state";
+
+// Lazy-load the print-styled report (heavy JSX + print CSS) so it doesn't
+// weigh down the initial detail-page bundle.
+const WelfareReport = lazy(() =>
+  import("@/components/welfare-report").then((m) => ({ default: m.WelfareReport })),
+);
 import {
   deletePartnerCitizen,
   getPartnerCitizen,
@@ -233,11 +239,19 @@ function CitizenDetail() {
         </div>
 
         <div className="mt-8">
-          <WelfareReport
-            citizen={c as any}
-            family={(q.data.family ?? []) as any}
-            recommendations={recs as any}
-          />
+          <Suspense
+            fallback={
+              <div className="rounded-3xl border border-border/70 bg-card p-6 text-sm text-muted-foreground">
+                Preparing report…
+              </div>
+            }
+          >
+            <WelfareReport
+              citizen={c as any}
+              family={(q.data.family ?? []) as any}
+              recommendations={recs as any}
+            />
+          </Suspense>
         </div>
 
         <div className="mt-8">
