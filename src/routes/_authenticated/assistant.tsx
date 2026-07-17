@@ -67,8 +67,8 @@ function AssistantPage() {
     onError: (err: any) => toast.error(err?.message ?? "Could not delete"),
   });
 
-  const convsQ = useQuery({ queryKey: ["conversations"], queryFn: () => listConv() });
-  const profQ = useQuery({ queryKey: ["profile"], queryFn: () => getProf() });
+  const convsQ = useQuery({ queryKey: ["conversations"], queryFn: () => listConv(), staleTime: 30_000 });
+  const profQ = useQuery({ queryKey: ["profile"], queryFn: () => getProf(), staleTime: 60_000 });
 
   useEffect(() => {
     if (!activeId && !isNew && convsQ.data && convsQ.data.length > 0) {

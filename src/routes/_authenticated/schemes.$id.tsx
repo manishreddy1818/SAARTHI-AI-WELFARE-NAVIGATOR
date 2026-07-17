@@ -44,9 +44,9 @@ function SchemeDetail() {
   const listSv = useServerFn(listSaved);
   const upsertApp = useServerFn(upsertApplication);
 
-  const schemeQ = useQuery({ queryKey: ["scheme", id], queryFn: () => getS({ data: { id } }) });
-  const recQ = useQuery({ queryKey: ["recommendations"], queryFn: () => getRec() });
-  const savedQ = useQuery({ queryKey: ["saved"], queryFn: () => listSv() });
+  const schemeQ = useQuery({ queryKey: ["scheme", id], queryFn: () => getS({ data: { id } }), staleTime: 300_000 });
+  const recQ = useQuery({ queryKey: ["recommendations"], queryFn: () => getRec(), staleTime: 60_000 });
+  const savedQ = useQuery({ queryKey: ["saved"], queryFn: () => listSv(), staleTime: 60_000 });
 
   const rec = useMemo<Recommendation | undefined>(() => {
     const list = recQ.data?.recommendations ?? [];

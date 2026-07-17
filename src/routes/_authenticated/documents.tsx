@@ -39,7 +39,7 @@ function DocumentsPage() {
   const del = useServerFn(deleteDocument);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const q = useQuery({ queryKey: ["documents"], queryFn: () => list() });
+  const q = useQuery({ queryKey: ["documents"], queryFn: () => list(), staleTime: 60_000 });
 
   const saveMut = useMutation({
     mutationFn: (row: any) => upsert({ data: row }),

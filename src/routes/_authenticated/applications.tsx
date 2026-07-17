@@ -32,7 +32,7 @@ function ApplicationsPage() {
   const qc = useQueryClient();
   const list = useServerFn(listApplications);
   const upsert = useServerFn(upsertApplication);
-  const q = useQuery({ queryKey: ["applications"], queryFn: () => list() });
+  const q = useQuery({ queryKey: ["applications"], queryFn: () => list(), staleTime: 60_000 });
 
   const setStatus = useMutation({
     mutationFn: (row: { scheme_id: string; status: any }) => upsert({ data: row }),

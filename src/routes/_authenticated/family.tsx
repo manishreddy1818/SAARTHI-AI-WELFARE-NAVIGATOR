@@ -31,8 +31,8 @@ function FamilyPage() {
     (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? "You";
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const q = useQuery({ queryKey: ["family"], queryFn: () => list() });
-  const recQ = useQuery({ queryKey: ["recommendations"], queryFn: () => recFn() });
+  const q = useQuery({ queryKey: ["family"], queryFn: () => list(), staleTime: 60_000 });
+  const recQ = useQuery({ queryKey: ["recommendations"], queryFn: () => recFn(), staleTime: 60_000 });
   const household =
     recQ.data && q.data
       ? buildHouseholdSummary(recQ.data.recommendations as any, q.data as any, firstName)

@@ -30,10 +30,10 @@ function CitizenDashboard() {
   const listApp = useServerFn(listApplications);
   const listFam = useServerFn(listFamily);
   const listDoc = useServerFn(listDocuments);
-  const recsQ = useQuery({ queryKey: ["recommendations"], queryFn: () => rec() });
-  const appsQ = useQuery({ queryKey: ["applications"], queryFn: () => listApp() });
-  const famQ = useQuery({ queryKey: ["family"], queryFn: () => listFam() });
-  const docsQ = useQuery({ queryKey: ["documents"], queryFn: () => listDoc() });
+  const recsQ = useQuery({ queryKey: ["recommendations"], queryFn: () => rec(), staleTime: 60_000 });
+  const appsQ = useQuery({ queryKey: ["applications"], queryFn: () => listApp(), staleTime: 60_000 });
+  const famQ = useQuery({ queryKey: ["family"], queryFn: () => listFam(), staleTime: 60_000 });
+  const docsQ = useQuery({ queryKey: ["documents"], queryFn: () => listDoc(), staleTime: 60_000 });
 
   const completeness = recsQ.data?.completeness ?? 0;
   const topRecs = (recsQ.data?.recommendations ?? []).slice(0, 3);
