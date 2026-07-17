@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SchemeCard } from "@/components/scheme-card";
 import { AiSummaryCard, buildAiSummary } from "@/components/ai-summary-card";
+import { WelfareReport } from "@/components/welfare-report";
 import {
   deletePartnerCitizen,
   getPartnerCitizen,
@@ -228,6 +229,14 @@ function CitizenDetail() {
 
         <div className="mt-8">
           <AiSummaryCard summary={summary} />
+        </div>
+
+        <div className="mt-8">
+          <WelfareReport
+            citizen={c as any}
+            family={(q.data.family ?? []) as any}
+            recommendations={recs as any}
+          />
         </div>
 
         <div className="mt-8">
