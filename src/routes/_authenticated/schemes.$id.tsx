@@ -18,7 +18,8 @@ import {
 import { PageShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { getScheme, getRecommendations, toggleSaved, listSaved, upsertApplication } from "@/lib/citizen.functions";
-import type { Recommendation } from "@/lib/rules-engine";
+import type { Recommendation, ExplanationEnvelope } from "@/lib/rules-engine";
+import { buildEnvelope, envelopeFromRecommendation } from "@/lib/rules-engine";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/schemes/$id")({
@@ -50,6 +51,17 @@ function SchemeDetail() {
     const list = recQ.data?.recommendations ?? [];
     return list.find((r: any) => r.scheme.id === id) as Recommendation | undefined;
   }, [recQ.data, id]);
+
+  // Explanation envelope: use the recommendation when available, otherwise
+  // build one deterministically from the current profile so the reasoning
+  // panels are never empty on direct scheme visits.
+  const envelope = useMemo<ExplanationEnvelope | undefined>(() => {
+    if (rec) return envelopeFromRecommendation(rec);
+    if (schemeQ.data && recQ.data?.profile) {
+      return buildEnvelope(schemeQ.data, recQ.data.profile as any);
+    }
+    return undefined;
+  }, [rec, schemeQ.data, recQ.data]);
 
   const isSaved = (savedQ.data ?? []).includes(id);
 
@@ -92,7 +104,7 @@ function SchemeDetail() {
   }
 
   const s = schemeQ.data;
-  const confidence = rec?.confidence ?? "medium";
+  const confidence = envelope?.confidence ?? "medium";
   const conf_color = confidence === "high" ? "var(--success)" : confidence === "medium" ? "var(--saffron)" : "var(--muted-foreground)";
 
   return (
@@ -114,7 +126,7 @@ function SchemeDetail() {
               {s.short_name && <p className="mt-1 text-sm text-muted-foreground">{s.short_name}</p>}
               <p className="mt-4 text-lg text-muted-foreground">{s.summary}</p>
             </div>
-            {rec && (
+            {envelope && (
               <span
                 className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium"
                 style={{ color: conf_color, backgroundColor: `color-mix(in oklch, ${conf_color} 15%, transparent)` }}
@@ -173,7 +185,7 @@ function SchemeDetail() {
         {/* Explanation Envelope */}
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           <Envelope title="Why we recommended this" icon={Sparkles} accent="var(--saffron)">
-            <p className="text-sm">{rec?.why_recommended ?? "This scheme fits the category of support you may need."}</p>
+            <p className="text-sm">{envelope?.why_recommended ?? "This scheme fits the category of support you may need."}</p>
           </Envelope>
 
           <Envelope title="Confidence" icon={BadgeCheck} accent={conf_color}>
@@ -185,20 +197,20 @@ function SchemeDetail() {
                 ? "You match most criteria; a few details would confirm eligibility."
                 : "You may qualify — a few facts are missing."}
             </p>
-            {rec && rec.gaps.length > 0 && (
+            {envelope && envelope.gaps.length > 0 && (
               <div className="mt-3 rounded-xl bg-muted/60 p-3 text-xs">
                 <p className="font-medium text-foreground">To increase confidence, share:</p>
                 <ul className="mt-1 list-disc pl-4 text-muted-foreground">
-                  {rec.gaps.map((g) => <li key={g}>{g}</li>)}
+                  {envelope.gaps.map((g) => <li key={g}>{g}</li>)}
                 </ul>
               </div>
             )}
           </Envelope>
 
           <Envelope title="Why you are eligible" icon={ShieldCheck} accent="var(--trust)" wide>
-            {rec ? (
+            {envelope ? (
               <ul className="space-y-2 text-sm">
-                {rec.why_eligible.map((r, i) => (
+                {envelope.why_eligible.map((r, i) => (
                   <li key={i} className="flex items-start gap-2">
                     <span
                       className={`mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full ${
