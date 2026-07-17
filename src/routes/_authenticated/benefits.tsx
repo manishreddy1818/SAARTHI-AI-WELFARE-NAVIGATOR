@@ -21,8 +21,8 @@ export const Route = createFileRoute("/_authenticated/benefits")({
 function BenefitsPage() {
   const rec = useServerFn(getRecommendations);
   const fam = useServerFn(listFamily);
-  const q = useQuery({ queryKey: ["recommendations"], queryFn: () => rec() });
-  const famQ = useQuery({ queryKey: ["family"], queryFn: () => fam() });
+  const q = useQuery({ queryKey: ["recommendations"], queryFn: () => rec(), staleTime: 60_000 });
+  const famQ = useQuery({ queryKey: ["family"], queryFn: () => fam(), staleTime: 60_000 });
   const [analyzing, setAnalyzing] = useState(true);
 
   useEffect(() => {
