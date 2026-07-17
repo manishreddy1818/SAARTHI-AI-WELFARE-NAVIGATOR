@@ -55,6 +55,80 @@ export type Recommendation = {
   gaps: string[]; // missing info that would strengthen match
 };
 
+/**
+ * Explanation Envelope
+ * --------------------
+ * Canonical, human-readable rationale for a single (scheme, person) pair.
+ * Every AI-facing surface (list card, scheme detail, action plan, partner
+ * dashboard, printable report) reads from this same shape so reasoning is
+ * consistent across the app. Deterministic — built from the rules engine
+ * output, no LLM required.
+ */
+export type ExplanationEnvelope = {
+  scheme_id: string;
+  matchedFor: "you" | { name: string; relationship: string };
+  score: number;
+  confidence: Recommendation["confidence"];
+  why_recommended: string;
+  why_eligible: EnvelopeReason[];
+  gaps: string[];
+  /** One-line, plain-English next thing to do. */
+  next_best_action: string;
+  /** Short trust marker ("Verified against Ministry of X"). */
+  trust_signal: string;
+};
+
+/**
+ * Build an Explanation Envelope for any (scheme, profile) pair.
+ * Used when a scheme is opened directly (no top-N recommendation available)
+ * so the eligibility reasoning UI is never empty.
+ */
+export function buildEnvelope(
+  scheme: Scheme,
+  profile: ProfileFacts,
+): ExplanationEnvelope {
+  const scored = scorePerson(scheme, profile, true);
+  const fallback: Omit<Recommendation, "scheme" | "matchedFor"> = scored ?? {
+    score: 0.4,
+    confidence: "low",
+    why_recommended: `This scheme provides ${
+      scheme.benefits[0]?.toLowerCase() ?? "targeted support"
+    }. Complete your profile to see personalised reasoning.`,
+    why_eligible: [{ label: "Open to eligible citizens", passed: true }],
+    gaps: ["a few profile details"],
+  };
+  return {
+    scheme_id: scheme.id,
+    matchedFor: "you",
+    score: fallback.score,
+    confidence: fallback.confidence,
+    why_recommended: fallback.why_recommended,
+    why_eligible: fallback.why_eligible,
+    gaps: fallback.gaps,
+    next_best_action: scheme.next_step,
+    trust_signal: scheme.trust_note
+      ? scheme.trust_note
+      : `Verified against ${scheme.ministry ?? "Government of India"}.`,
+  };
+}
+
+/** Extract an ExplanationEnvelope from an existing Recommendation. */
+export function envelopeFromRecommendation(rec: Recommendation): ExplanationEnvelope {
+  return {
+    scheme_id: rec.scheme.id,
+    matchedFor: rec.matchedFor,
+    score: rec.score,
+    confidence: rec.confidence,
+    why_recommended: rec.why_recommended,
+    why_eligible: rec.why_eligible,
+    gaps: rec.gaps,
+    next_best_action: rec.scheme.next_step,
+    trust_signal: rec.scheme.trust_note
+      ? rec.scheme.trust_note
+      : `Verified against ${rec.scheme.ministry ?? "Government of India"}.`,
+  };
+}
+
 type Elig = {
   age?: { min?: number; max?: number };
   gender?: string[];
