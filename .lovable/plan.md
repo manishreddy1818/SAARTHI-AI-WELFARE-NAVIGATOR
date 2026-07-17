@@ -1,268 +1,437 @@
-# SAARTHI Phase 1 — Grand Finale AI Upgrade Blueprint
+# SAARTHI Phase 2 — Welfare Journey Platform Blueprint
 
-Scope: planning only. No code, no files, no schema changes yet. This blueprint targets five upgrades that turn the existing chatbot into a true AI Welfare Assistant while reusing current infra (TanStack Start + Lovable AI Gateway + Supabase + existing `rules-engine.ts` and `citizen.functions.ts`).
+Scope: planning only. No code, no files, no migrations. Phase 2 is strictly additive on top of the approved Phase 1 (Memory, Personality, Explanation Envelope, Action Plan, Thinking Experience). Every feature reuses Phase 1 outputs and existing tables wherever possible.
+
+Ground rules:
+- Zero regression to auth, voice I/O, citizen dashboard, partner portal, family mode, benefits, opportunity unlock, stories, rules engine, recommendation flow, design system, responsive layout, navigation, and every Phase 1 surface.
+- No route renames. No page redesigns. New surfaces are added as sub-sections inside existing routes.
+- Prefer deterministic derivation over new LLM calls. Avoid new tables unless unavoidable.
+- Any feature that would require a major architectural change is flagged inline, not silently done.
 
 ---
 
-## Feature 1 — Conversational Memory
+## Feature 1 — Household Welfare Summary
 
 **Purpose**
-Make SAARTHI remember facts stated earlier in a conversation (occupation, state, family, disability, income) so it never re-asks and can reference them naturally later.
+Give the family one combined view of their welfare position so they see the total value and blockers in one glance.
 
 **User Experience**
-- User says "I'm a farmer in Telangana" once. Next turn: "Since you farm in Telangana, PM-KISAN looks like a strong fit…"
-- Returning users see "Welcome back — I still have your profile on file. Want me to re-check for new schemes?"
+A new summary strip at the top of the existing `/_authenticated/benefits` page (the current per-scheme grid stays below, untouched). Contents:
+- Total Eligible Schemes (household, deduped by scheme_id)
+- Estimated Annual Benefits (₹/year)
+- Family Members Covered (e.g., "4 of 5")
+- Missing Documents (aggregated chips per member)
+- Highest Priority Scheme (single compact Phase 1 envelope card)
+- Household Welfare Readiness % (0–100)
 
-**AI Workflow (three memory layers)**
-1. Short-term (turn window): full `UIMessage[]` for the active `conversations` row — already partially in place.
-2. Structured working memory: a JSON "facts card" the model maintains per conversation (age, state, occupation, income, category, disability, family[]). Updated via a lightweight `update_profile_facts` tool call the model emits when new facts are detected.
-3. Long-term: reconcile the facts card into `profiles` / `family_members` on confirmation ("Save this to your profile?"). Never silently overwrite user-entered profile fields.
-
-Every model call receives: system prompt + compact facts card (rendered as bullet list) + last N messages (token-budgeted, older turns summarized by a cheap Gemini flash-lite pass).
-
-**Backend Changes**
-- New server fn `getConversationMemory(conversationId)` → returns `{ facts, summary, messages }`.
-- New server fn `upsertConversationFacts(conversationId, partialFacts)`.
-- Extend the chat handler to (a) inject memory into the system prompt, (b) run the model's `update_profile_facts` tool result back into the facts row, (c) after N turns, background-summarize older messages.
-
-**Frontend Changes**
-- Chat composer badge: "Remembers: farmer · Telangana · 2 dependents" with an "edit / forget" affordance.
-- On assistant page mount, show a "Resuming your last conversation" chip if memory exists.
-
-**Database Impact**
-- New column on `conversations`: `facts jsonb default '{}'`, `summary text`, `summary_updated_at timestamptz`.
-- Reuse `chat_messages` unchanged. RLS: user owns their conversation → memory follows same policy. Add GRANT block per existing conventions.
-
-**API Impact**
-- Chat streaming route gains a tool: `update_profile_facts(partial)`. No new public endpoint.
-- Rules engine consumes the facts card as a `ProfileFacts` overlay when profile fields are missing.
-
-**Risks**
-- Hallucinated facts poisoning memory → require model to only write facts it can quote from the user; show diff before writing to `profiles`.
-- Token bloat → hard cap facts card at ~400 tokens; summarize > 20 turns.
-- Privacy → facts are per-user, RLS enforced, never sent to any non-Lovable AI endpoint.
-
-**Success Criteria**
-- Zero re-asks for a fact already stated in the same conversation (measured across a 10-turn scripted test).
-- Assistant references at least one prior fact per response after turn 3.
-- Facts card survives page reload and thread switch.
-
----
-
-## Feature 2 — Human-like AI Personality
-
-**Purpose**
-Replace generic assistant tone with a warm, culturally aware welfare guide.
-
-**User Experience**
-Opening turn:
-> "Namaste, Manish 👋 Welcome back. I remember you're a farmer in Warangal with two dependents. I found 3 schemes that may benefit your family today — want me to walk you through them?"
-
-**Tone guidelines**
-- Warm, respectful, plain language (grade-6 reading level in English; matches user's language when detected).
-- Uses the user's name when known; falls back to "friend" — never "user".
-- Namaste / greeting once per session, not per turn.
-- Empathetic on hardship topics (disability, widow pensions) — never clinical.
-- Ends most responses with one concrete next step or one clarifying question, not both.
-
-**Personality rules**
-- Confident but humble: "I think this fits — please double-check at MeeSeva."
-- Never invents scheme names, benefit amounts, or URLs; if unsure, says so and offers to search.
-- Uses Indian context defaults (₹, DD-MM-YYYY, state names, ministry names).
-- No emojis in error/warning responses; ≤1 emoji elsewhere.
-
-**Memory usage rules**
-- Cite memory naturally, not robotically ("Since you mentioned…" not "Based on stored fact occupation=farmer").
-- Ask before persisting a new fact to the long-term profile.
-- If facts conflict (user says something new), confirm which is current before overwriting.
-
-**Backend Changes**
-- Single `SAARTHI_SYSTEM_PROMPT` constant in a server-only module, versioned. Includes tone, personality, memory rules, refusal rules, and the Explanation Envelope contract (Feature 3).
-
-**Frontend Changes**
-- Assistant header shows persona ("SAARTHI · your welfare guide"). Avatar + subtle status ("thinking", "reading your profile") tied to Feature 5.
-
-**Database Impact**
-- None (prompt lives in code).
-
-**API Impact**
-- All model calls use the shared system prompt. Enforced in the chat route and in `citizen.functions.ts` recommendation calls.
-
-**Risks**
-- Over-familiarity feeling patronizing → keep persona knobs adjustable via a single constants file, review with 3 sample personas (rural elder, urban student, PwD applicant).
-- Model drift on Gemini flash → include 2 few-shot exemplars in the system prompt.
-
-**Success Criteria**
-- Human review: 8/10 sample responses rated "friendly and clear".
-- Zero occurrences of "As an AI language model…" or similar meta phrases in a 50-prompt regression set.
-
----
-
-## Feature 3 — Explainable AI Upgrade (Explanation Envelope)
-
-**Purpose**
-Every recommendation carries a structured, auditable explanation the UI can render deterministically.
-
-**Envelope shape (contract; not code)**
-- `scheme_id`, `scheme_name`
-- `why_recommended` — 1–2 sentence plain-language reason
-- `confidence` — `high | medium | low` + numeric `score` 0–1
-- `matching_criteria[]` — `{ label, passed: true, evidence }`
-- `missing_criteria[]` — `{ label, needed_value, current_value }`
-- `missing_documents[]` — from `required_documents` minus documents already on file
-- `estimated_benefit` — `{ amount_inr | in_kind, cadence, note }`
-- `ai_reasoning` — short natural-language chain: facts → rule → conclusion
-- `sources[]` — official URL(s) + last-verified date
-- `next_step` — carried into Feature 4
+**Business Workflow**
+- On page load, existing `getRecommendations` + `listFamily` + `listDocuments` queries are already fetched. Composition happens client-side (or in one thin server fn) with zero extra network cost.
+- Any change to family_members, profile, or documents invalidates React Query keys `['recommendations','family','documents']` → summary re-derives automatically.
 
 **AI Workflow**
-- Rules engine (`recommend()`) already emits `why_eligible`, `gaps`, `score`, `confidence`. Extend to also emit `missing_documents` (join with `documents` table) and `estimated_benefit` (parsed from `schemes.benefits`).
-- A second, small LLM pass ("explainer") converts the deterministic envelope into the natural `why_recommended` and `ai_reasoning` strings using the system prompt from Feature 2. Deterministic fields are never model-generated.
+None. Pure aggregation from Phase 1 envelopes. No new model call.
 
 **Backend Changes**
-- Extend `Recommendation` type and `recommend()` output in `rules-engine.ts`.
-- New server fn `explainRecommendation(recId)` → runs the explainer LLM pass on demand, cached in memory per conversation.
-- `getRecommendations` returns envelopes; explainer text is fetched lazily when a card is expanded (keeps list fast).
+- New pure helper `computeHouseholdSummary(recs, family, documents, profile)` in `rules-engine.ts` (deterministic).
+- Optional thin server fn `getHouseholdSummary()` that composes the three existing server fns in one round trip. Skippable if the client already has all three cached — decide by measuring.
 
 **Frontend Changes**
-- `SchemeCard` grows a "Why this?" expandable section rendering the envelope with clear sub-sections and a confidence bar.
-- Missing criteria/documents show inline CTAs ("Add income", "Upload Aadhaar") linking to profile/documents pages.
+- New `<HouseholdSummaryCard>` rendered above the existing grid on `benefits.tsx`. Grid untouched.
+- Existing `AiSummaryCard` remains in place for the self-scope narrative.
 
 **Database Impact**
-- Optional: `applications.explanation jsonb` snapshot when the user saves a scheme (audit trail).
-- Add `schemes.estimated_benefit jsonb` if we want structured amounts (nullable, backfill later).
+None.
 
 **API Impact**
-- Envelope schema exposed to MCP `list_recommendations` tool so external agents get the same structure.
+- MCP `list_recommendations` gains optional `scope: "self" | "household"` param that returns the same shape plus a `household_summary` block.
 
-**Risks**
-- LLM explainer contradicting rules engine → explainer prompt is strictly "rewrite these facts", never "decide eligibility". Guardrail: reject explainer output if it introduces a criterion not present in the envelope (regex/set check).
-- Envelope size on long lists → keep envelope compact; lazy-load `ai_reasoning`.
+**Security Considerations**
+- Only touches rows the caller already owns (profile, own family_members, own documents). No new surface.
+
+**Performance Considerations**
+- O(schemes × members) is already the recommendation cost; summary is O(recs) on top. Target <5ms client-side.
+- Memoize by hash of (recommendations version, family length, documents length).
+
+**Potential Risks**
+- Benefit double-count when a scheme applies to multiple members → dedupe by `scheme_id` before summing; label the total as "estimated, one claim per scheme".
+- Family_members count vs `profiles.household_size` mismatch → prefer explicit family_members; show a soft hint if they diverge.
 
 **Success Criteria**
-- 100% of recommendations include all envelope fields (nulls allowed only for `estimated_benefit` with note).
-- Judge test: pick any card → user can name the top 2 reasons in <5 seconds.
+- Summary refreshes within one refetch after any family/document/profile edit.
+- Total = sum over unique scheme envelopes in the grid, verifiable on-screen.
+
+**Reused components**
+`SchemeCard`, `AiSummaryCard`, benefits page shell, `rules-engine.ts`, existing `getRecommendations` / `listFamily` / `listDocuments`.
+
+**Newly required**
+`<HouseholdSummaryCard>`, `computeHouseholdSummary()`, optional `getHouseholdSummary()`.
+
+**Phase 1 outputs reused**
+Explanation Envelope (`estimated_benefit`, `missing_documents`, `confidence`).
+
+**How it avoids regressions**
+Purely additive DOM above the existing grid; no existing component's props or behavior change.
 
 ---
 
-## Feature 4 — AI Action Plan
+## Feature 2 — Smart Opportunity Unlock
 
 **Purpose**
-Turn "you qualify" into a stepwise, trackable roadmap per scheme.
-
-**Action Plan structure**
-Ordered steps, each with:
-- `step_no`, `title`, `type` (`document | visit | online | verification | disbursal`)
-- `today | next | later` bucket
-- `estimated_time` (e.g., "10 min", "3–5 working days")
-- `location` (Aadhaar center / MeeSeva / online portal + URL)
-- `prerequisites[]` (references to `missing_documents`)
-- `expected_benefit_after` (partial or full)
-- `status` (`pending | in_progress | done | blocked`) — user-editable
-- `evidence[]` (uploaded receipts / acknowledgment IDs)
+Turn the existing Opportunity Unlock into a prioritized "one action, many benefits" list showing the highest-leverage next step.
 
 **User Experience**
-Vertical stepper on the scheme detail page:
-> Today's Action → Upload Aadhaar
-> Next Step → Visit MeeSeva (est. 30 min)
-> Processing → 7–14 days
-> Expected Benefit → ₹6,000/year
-> Status → Pending
+The existing Opportunity Unlock component (unchanged route) gets richer rows:
+- Missing Requirement (e.g., "Income Certificate", "Category: SC/ST/OBC")
+- Schemes that unlock (badges, top 3 + "+N more")
+- Estimated Additional Benefits (₹/year)
+- Priority (High / Medium / Low)
+- One-click CTA — deep link to the exact profile field or documents page
 
-Progress ring on the applications page; nudges ("You're 1 step away from ₹6,000/year").
+Old row shape kept as a fallback for anything the new pipeline can't classify.
+
+**Business Workflow**
+Deterministic "what-if" pass:
+1. Enumerate gaps and missing_documents from every Phase 1 recommendation.
+2. For each candidate gap, run a hypothetical `recommend()` with that gap filled and diff eligible set.
+3. Rank by `(newly_unlocked_benefit_sum × avg_confidence_lift) / effort_weight`, where `effort_weight` is a small static table (upload = 1, verify = 3, visit office = 5).
+4. Cap simulation to the top 8 most-frequent gaps to keep it O(recs).
 
 **AI Workflow**
-- Generate the plan once per (user, scheme) via a `generateActionPlan` server fn. Input: envelope + user's document set + state. Output: JSON action plan validated against a strict schema.
-- Regenerate on demand or when a prerequisite is fulfilled (upload event).
-- Model role is templating; the deterministic base (documents required, official URL, portal) comes from `schemes` and `documents` tables — not from the model.
+None required. Optional single Phase 1 personality LLM pass to phrase the top opportunity as one sentence — feature works without it.
 
 **Backend Changes**
-- New server fn `generateActionPlan(schemeId)` and `updateActionStep(applicationId, stepNo, status)`.
-- Hook into existing `applications` flow: creating an application seeds its plan.
+- New helper `simulateFactFill(facts, key, value)` and `computeOpportunities(recs, profile, family, documents)` in `rules-engine.ts`.
+- Optional server fn `getOpportunities()` if we want it cached server-side; otherwise client-side over cached data.
 
 **Frontend Changes**
-- New "Action Plan" section on `schemes.$id.tsx` and on the applications page.
-- Stepper component with status toggles, document links, and a "Mark done" affordance.
+- Existing Opportunity Unlock UI rendered with a richer row template. Route, container, and layout unchanged.
 
 **Database Impact**
-- New table `application_action_plans` (application_id FK, steps jsonb, generated_at, model_version). RLS: owner-only. Full GRANT block per project rules.
-- Or store `plan jsonb` directly on `applications` — simpler, chosen unless we need history.
+None.
 
 **API Impact**
-- MCP `list_applications` tool gains a `plan` field so agents can drive next steps.
+- MCP: new `list_opportunities` tool exposing the same DTO.
 
-**Risks**
-- Model inventing offices/URLs → constrain via a whitelist derived from the scheme row; any URL not in whitelist is dropped.
-- Stale plans after policy change → include `generated_at` and a "Refresh plan" button; invalidate when scheme row changes.
+**Security Considerations**
+- What-if simulation reads only owner data; no writes.
+
+**Performance Considerations**
+- Cap gap candidates at 8; run diffs in-memory. Expected <20ms for typical citizen data.
+- Cache by (recommendations hash, profile hash).
+
+**Potential Risks**
+- Combinatorial cost with many gaps → hard cap (above).
+- Soft-signal facts (e.g., SECC) → mark unlocks as "likely, verify" rather than guaranteed.
+- Misleading ₹ totals if a scheme applies to multiple members → dedupe by scheme_id inside each unlock.
 
 **Success Criteria**
-- Every saved application has a plan within 3 seconds of save.
-- ≥90% of steps map to a real document, portal, or verification action (spot-checked on 20 samples).
+- After filling any suggested gap, the previously-listed unlocks appear as eligible in Phase 1 recommendations (round-trip verified).
+- Top opportunity's ₹ value is a non-decreasing function of the number of unlocked schemes.
+
+**Reused components**
+Existing Opportunity Unlock UI, `rules-engine.ts`, Phase 1 envelope, documents/profile page CTAs.
+
+**Newly required**
+`simulateFactFill()`, `computeOpportunities()`, priority badge, richer row template.
+
+**Phase 1 outputs reused**
+Envelope's `missing_criteria`, `missing_documents`, `estimated_benefit`, `confidence`.
+
+**How it avoids regressions**
+Same route and container; only the row template is enriched. Fallback path preserves current rendering when data is insufficient.
 
 ---
 
-## Feature 5 — AI Thinking Experience
+## Feature 3 — Partner Decision Dashboard
 
 **Purpose**
-Replace generic spinners with a realistic reasoning trace that mirrors actual backend work.
+Give a welfare partner a scannable operational summary per citizen so a volunteer can decide next action in under 30 seconds.
 
 **User Experience**
-Live status list while a recommendation or action plan is being computed:
-- 🧠 Understanding your profile…
-- 📄 Reading family information…
-- 🔍 Checking eligibility across 200+ schemes…
-- 📑 Matching central and state schemes…
-- ✅ Preparing recommendations…
+On the existing `partner.citizens.$id.tsx` page, add a top summary block (existing intake/detail sections stay below and unchanged):
+- Citizen Overview (name, age, state, occupation, household size)
+- Priority Level (High / Medium / Low)
+- Eligible Schemes (count + top 3 chips)
+- Missing Documents (aggregated)
+- Risk Indicators (e.g., disability + no pension, widow + no widow-pension, income < ₹5k + no ration card, minor + out of school)
+- Recommended Next Step (single sentence)
+- Follow-up Priority (7 / 30 / 90 days)
+- Estimated Benefit Coverage % (benefits available vs benefits already applied)
 
-Each row transitions from active → done with a checkmark, tied to a real event, not a fake timer.
+**Business Workflow**
+Deterministic:
+- Static `RISK_FLAGS` rule table applied to the citizen row + `partner_citizen_family`.
+- Priority Level derived from `(number_of_high_risk_flags, sum(estimated_benefit), missing_documents_count)` with fixed thresholds.
+- Follow-up Priority derived from priority × application status ages.
 
 **AI Workflow**
-- Chat + recommendation server fns emit progress events (Server-Sent Events on the chat route already streams; extend the streamed protocol with typed `status` parts).
-- Client renders parts of type `status` as steps; assistant text parts continue as normal.
-- The existing `AnalyzingSteps` component is upgraded from timer-driven to event-driven, keeping the same visual language but tied to true milestones: profile fetch, schemes fetch, rules-engine run, envelope build, explainer LLM call.
+Optional Phase 1 personality pass (partner-mode tone, formal) to phrase the Recommended Next Step sentence. Guardrail: the LLM only rewords facts already present in the deterministic DTO; any invented field is dropped by a whitelist check.
 
 **Backend Changes**
-- Chat route: interleave `data: { type: "status", label, state }` events in the UIMessage stream.
-- `getRecommendations`: convert into a streamed server route (`/api/recs.stream`) or emit progress via a lightweight Supabase realtime channel; simplest is streaming.
+- New server fn `getPartnerCitizenSummary(citizenId)` guarded by `requireSupabaseAuth` + role check via `has_role(auth.uid(), 'partner')`.
+- Static `RISK_FLAGS` table alongside `rules-engine.ts`.
 
 **Frontend Changes**
-- Replace `AnalyzingSteps` timer with subscription to the streamed status parts.
-- Persist last "thinking trace" alongside the final answer so users can expand "How SAARTHI thought" post-hoc.
+- New `<PartnerCitizenSummaryCard>` at the top of the citizen detail page. Existing sections unchanged.
 
 **Database Impact**
-- Optional: store the trace on `chat_messages` as `metadata jsonb` for replay.
+None required. All fields derivable from existing `partner_citizens` + `partner_citizen_family` + `schemes` + `applications`.
 
 **API Impact**
-- Public shape of the stream stays UIMessage-compatible; adds a new part type `status`. MCP unaffected.
+- New authenticated server fn only. No public endpoint.
 
-**Risks**
-- Fake-looking steps if backend is fast → merge steps under a threshold; never show a step that didn't run.
-- Streaming compat on Cloudflare Workers — already used for chat, so proven.
+**Security Considerations**
+- Partner role verified before returning anything.
+- RLS on `partner_citizens` already scopes to the owning partner; new fn adds no bypass.
+
+**Performance Considerations**
+- Reuses cached recommendations for the citizen; one extra pass over rules table. Target <300ms warm.
+
+**Potential Risks**
+- LLM introducing invented flags → deterministic flags only render; LLM text is descriptive.
+- Priority misclassification → thresholds are documented and adjustable in one place.
 
 **Success Criteria**
-- Every visible step corresponds to a real backend milestone (audit via server logs).
-- Perceived latency drops in user test even when actual latency is unchanged.
+- Card renders in <1s on warm cache for a citizen with ≤10 family members.
+- Every displayed flag is reproducible from `RISK_FLAGS` (no black-box outputs).
+
+**Reused components**
+Partner portal shell, existing citizen detail page, `rules-engine.ts`, Phase 1 personality prompt (partner variant).
+
+**Newly required**
+`<PartnerCitizenSummaryCard>`, `RISK_FLAGS`, `getPartnerCitizenSummary()`.
+
+**Phase 1 outputs reused**
+Envelope + optional personality text.
+
+**How it avoids regressions**
+Additive card only; existing partner routes, forms, and lists are unaffected.
+
+---
+
+## Feature 4 — Printable Welfare Report
+
+**Purpose**
+Produce a printable one-document snapshot the citizen (or partner) can take to a MeeSeva / CSC counter.
+
+**User Experience**
+- "Download / Print Welfare Report" button on:
+  - Citizen: benefits page and profile page.
+  - Partner: `partner.citizens.$id.tsx`.
+- Click opens a modal with a rendered HTML preview and a "Print / Save as PDF" action.
+- Sections:
+  1. Citizen Profile Summary
+  2. Family Summary (Feature 1 output)
+  3. Eligible Schemes (Phase 1 envelopes, condensed)
+  4. Explanation Summary (per scheme: 1–2 lines from envelope)
+  5. Missing Documents (grouped by member)
+  6. AI Action Plan (Phase 1 output for top scheme)
+  7. Generated timestamp + SAARTHI footer + disclaimer
+
+Explicitly out of scope: cloud sharing, QR codes, public links.
+
+**Business Workflow**
+- Compose the report entirely from data already available in the app: profile, family, recommendations, action plan.
+- Render to a print-only HTML template with `window.print()` (browser handles PDF output).
+
+**AI Workflow**
+None required. Optional Phase 1 personality pass for a 2-sentence executive summary — feature works without it.
+
+**Backend Changes**
+- Optional server fn `buildWelfareReport()` returning a structured `ReportModel` for reproducibility. If all fields are already cached client-side, this can be pure client composition.
+
+**Frontend Changes**
+- New `<WelfareReportModal>` with an HTML template that matches design tokens.
+- New print stylesheet scoped to `.print-report` in `src/styles.css` (page-break rules, hide chrome). No impact on normal pages.
+
+**Database Impact**
+None.
+
+**API Impact**
+None.
+
+**Security Considerations**
+- Report never leaves the browser; no share links, no server storage.
+- Partner variant is gated by the existing partner role check.
+
+**Performance Considerations**
+- Preview renders from cached data in <500ms.
+- Uses the browser's native print engine — no Worker-side PDF library, avoids Cloudflare Workers runtime constraints.
+
+**Potential Risks**
+- Print layout drift across browsers → verify Chrome + Firefox + Safari with A4 defaults; provide a "1 page" and "multi-page" mode.
+- Long family lists overflowing → set `page-break-inside: avoid` per section.
+
+**Success Criteria**
+- Report prints cleanly on A4 with all sections readable; sample verified via `pdftoppm` inspection during dev.
+- Zero PII leaves the browser.
+
+**Reused components**
+Phase 1 envelopes, Feature 1 household summary, Phase 1 action plan, design tokens.
+
+**Newly required**
+`<WelfareReportModal>`, optional `buildWelfareReport()`, print stylesheet.
+
+**Phase 1 outputs reused**
+Envelope + action plan + optional personality summary.
+
+**How it avoids regressions**
+Modal is opened on demand from existing pages; print styles are namespaced and cannot affect normal rendering.
+
+---
+
+## Feature 5 — Application Journey Tracker
+
+**Purpose**
+Show the citizen where they are across the whole welfare journey, not just per-scheme, and nudge completion.
+
+**User Experience**
+- Persistent horizontal tracker at the top of the citizen dashboard (does not replace existing widgets).
+- Stages: Profile Completed → Eligibility Checked → Documents Ready → Application Submitted → Application Processing → Benefits Received.
+- Displays: Current Stage, Overall Progress %, Pending Tasks list, Estimated Remaining Steps.
+- Clicking a stage scrolls to the relevant existing section.
+
+**Business Workflow**
+Deterministic derivation from data already in the app:
+- Profile Completed: `profiles.updated_at` and completeness ≥ 40% (existing `profileCompleteness`).
+- Eligibility Checked: `recommendations` query has returned at least one row this session, OR a persisted flag (see Database Impact below).
+- Documents Ready: `documents` count ≥ required-docs count for the top-priority scheme.
+- Application Submitted: `applications.status in ('submitted','under_review','approved','received')`.
+- Application Processing: `applications.status = 'under_review'`.
+- Benefits Received: `applications.status = 'received'` OR action-plan disbursal step marked done.
+
+Progress % is a weighted sum of stage flags (monotonic — never regresses without a user action).
+
+**AI Workflow**
+None. Optional Phase 1 personality one-liner ("You're one step from Documents Ready — upload Aadhaar next.").
+
+**Backend Changes**
+- New server fn `getJourneyStatus()` composing existing tables into stage flags. No new tables required — Eligibility Checked can be inferred from "has recommendations for this profile hash" cached in memory or in `profiles.last_eligibility_checked_at` if we want durability (single optional nullable column, no new table).
+
+**Frontend Changes**
+- New `<JourneyTracker>` at the top of the citizen dashboard.
+- Small hooks into existing flows to update the optional `last_eligibility_checked_at` timestamp when recommendations are first fetched — no UI changes to those flows.
+
+**Database Impact**
+- Prefer zero schema change. If durability of "Eligibility Checked" across sessions is required, add a single nullable column `profiles.last_eligibility_checked_at timestamptz` with existing RLS (no new table). GRANT block already covers `profiles`.
+
+**API Impact**
+- MCP: `get_journey_status` tool for agent use (optional, low priority).
+
+**Security Considerations**
+- All derivations use the caller's own rows under existing RLS. No new attack surface.
+
+**Performance Considerations**
+- Journey status is O(applications + documents + recommendations) — all already fetched on the dashboard. Compose client-side to avoid extra round trips.
+
+**Potential Risks**
+- Regressing stages if a user deletes an application → treat stage regression as intentional (reflects reality).
+- Phrasing feeling punitive → follow Phase 1 personality guidelines.
+
+**Success Criteria**
+- Tracker updates within one interaction after uploading a document or saving an application.
+- No stage regresses without a corresponding user action (6-step scripted test).
+
+**Reused components**
+Citizen dashboard shell, existing applications/documents/recommendations queries, `profileCompleteness`.
+
+**Newly required**
+`<JourneyTracker>`, `getJourneyStatus()`, optional `profiles.last_eligibility_checked_at` column.
+
+**Phase 1 outputs reused**
+Action plan step completion (Benefits Received), envelope's `missing_documents` (Documents Ready count).
+
+**How it avoids regressions**
+Additive strip on the dashboard; existing widgets unchanged. Optional column is nullable with a default of null.
+
+---
+
+## Feature 6 — Where to Apply
+
+**Purpose**
+For each scheme, surface a lightweight list of "where to apply" options without a location platform.
+
+**User Experience**
+On the existing scheme detail page (`schemes.$id.tsx`), add a small section:
+- Official Portal (with URL)
+- MeeSeva
+- CSC
+- Government Office (department name)
+- Purpose / Supported Services
+- Official Website
+
+Static, deterministic, no maps, no distance.
+
+**Business Workflow**
+- The mapping (`scheme → channels`) is a small deterministic lookup keyed off `schemes.category`, `schemes.ministry`, and `schemes.level`. A small typed constant `SCHEME_CHANNELS` in `rules-engine.ts` (or a sibling module) provides sensible defaults per category — no new table.
+- Per-scheme overrides can live in an existing free-form column such as `schemes.tags` or a new nullable `schemes.channels jsonb` if we want editorial control later. Preferred: no schema change for Phase 2; add later if editorial control becomes necessary.
+
+**AI Workflow**
+None.
+
+**Backend Changes**
+- New helper `getSchemeChannels(scheme)` returning a typed list of channels.
+
+**Frontend Changes**
+- New `<SchemeChannelsList>` embedded on the scheme detail page below the existing header. No layout changes to the rest of the page.
+
+**Database Impact**
+- Preferred: none. Mapping is code-level constants.
+- Optional (deferred): `schemes.channels jsonb` if editorial overrides are needed later.
+
+**API Impact**
+- MCP: optional `get_scheme_channels` tool for agent use.
+
+**Security Considerations**
+- Static reference data; no user data involved.
+
+**Performance Considerations**
+- Constant-time lookup. Zero network cost.
+
+**Potential Risks**
+- Wrong or stale channel information → include a short disclaimer and "verify locally" note.
+- Categories not covered by defaults → fallback shows only Official Portal + Government Office.
+
+**Success Criteria**
+- Every scheme shows at least Official Portal + one physical channel.
+- No scheme detail page slows down beyond current baseline (measure LCP unchanged).
+
+**Reused components**
+Scheme detail page shell, design tokens.
+
+**Newly required**
+`<SchemeChannelsList>`, `SCHEME_CHANNELS`, `getSchemeChannels()`.
+
+**Phase 1 outputs reused**
+Optionally linked from Phase 1 action plan steps.
+
+**How it avoids regressions**
+Additive section only; existing scheme detail rendering, buttons, and layout unchanged.
 
 ---
 
 ## Cross-cutting concerns
 
-- Model choice: `google/gemini-3-flash-preview` for chat, explainer, and plan generation (default). Escalate to `google/gemini-3.1-pro-preview` only for the explainer when confidence < 0.5.
-- Cost/latency budget per recommendation set: ≤ 2 model calls (rules → explainer; plan is on-demand).
-- Security: all new server fns behind `requireSupabaseAuth`. New tables get RLS + GRANT in the same migration.
-- Observability: log `{conversation_id, feature, model, tokens, latency_ms, error}` for every model call.
-- Feature flags: ship each of the 5 behind a per-user flag on `profiles` so we can demo incrementally at the finale.
+- **AI usage**: only Features 1, 2, 3, 4 have optional one-liner LLM passes, each degradable to deterministic output. Default cap: at most one Gemini flash call per feature per view. Feature flags per profile so we can toggle at demo time.
+- **Caching**: React Query keys (`recommendations`, `family`, `documents`, `applications`, `profile`) are reused; new summaries derive client-side to avoid new round trips.
+- **Migrations**: at most one small nullable column on `profiles` for Feature 5. No new tables in Phase 2.
+- **Runtime**: no Node-only packages introduced. Report uses browser print — no Worker PDF library.
+- **Observability**: log `{feature, ms}` for each new helper; add `{model, tokens}` only when the optional LLM path runs.
+- **Backward compatibility**: every new component is additive, sits inside an existing route, and has a fallback state that reproduces the current UI when data is missing.
 
----
+## Architectural changes flagged
+
+None. Every Phase 2 feature stays within the current architecture. If later the user asks for cloud sharing / QR / server-side PDF, that must be re-scoped separately because it introduces Worker runtime constraints and public read paths.
 
 ## Rollout order (proposed)
 
-1. Personality + system prompt (Feature 2) — foundation, zero risk.
-2. Explanation Envelope (Feature 3) — pure backend + card polish.
-3. Conversational Memory (Feature 1) — depends on system prompt.
-4. Thinking Experience (Feature 5) — piggybacks on existing stream.
-5. Action Plan (Feature 4) — largest surface, ships last.
+1. Feature 1 — Household Summary (pure derivation, safest first).
+2. Feature 5 — Journey Tracker (thin, high perceived value).
+3. Feature 2 — Smart Opportunity Unlock (extends existing surface).
+4. Feature 6 — Where to Apply (constant-time addition).
+5. Feature 3 — Partner Decision Dashboard (partner scope, isolated).
+6. Feature 4 — Printable Welfare Report (largest surface, ships last).
 
 ---
 
-Phase 1 Planning Complete — Awaiting Approval.
+Phase 2 Planning Complete — Awaiting Approval.
