@@ -15,6 +15,7 @@ import { PageShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { listPartnerCitizens, partnerStats } from "@/lib/partner.functions";
 import { StatusBadge } from "@/components/partner-status-badge";
+import { PartnerDecisionDashboard } from "@/components/partner-decision-dashboard";
 
 export const Route = createFileRoute("/_authenticated/partner/")({
   head: () => ({
@@ -39,6 +40,7 @@ function PartnerDashboard() {
 
   const s = statsQ.data ?? { total: 0, benefits: 0, started: 0, completed: 0, followUp: 0 };
   const recent = (followupsQ.data ?? []).slice(0, 5);
+  const allCitizens = (followupsQ.data ?? []) as any[];
 
   return (
     <PageShell>
@@ -81,6 +83,12 @@ function PartnerDashboard() {
             tone="soft"
           />
         </div>
+
+        {allCitizens.length > 0 && (
+          <div className="mt-8">
+            <PartnerDecisionDashboard citizens={allCitizens} />
+          </div>
+        )}
 
         <div className="mt-10 rounded-3xl border border-border/70 bg-card p-6">
           <div className="flex items-end justify-between">
