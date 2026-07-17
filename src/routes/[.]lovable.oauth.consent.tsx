@@ -105,7 +105,7 @@ function Consent() {
             Approve
           </Button>
         </div>
-      </main>
+      </div>
     </PageShell>
   );
 }
