@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { PageShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
-import { getScheme, getRecommendations, toggleSaved, listSaved, upsertApplication } from "@/lib/citizen.functions";
+import { getScheme, getRecommendations, toggleSaved, listSaved, upsertApplication, listDocuments } from "@/lib/citizen.functions";
 import type { Recommendation, ExplanationEnvelope } from "@/lib/rules-engine";
 import { buildEnvelope, envelopeFromRecommendation } from "@/lib/rules-engine";
 import { ActionPlanCard } from "@/components/action-plan";
@@ -43,10 +43,24 @@ function SchemeDetail() {
   const toggle = useServerFn(toggleSaved);
   const listSv = useServerFn(listSaved);
   const upsertApp = useServerFn(upsertApplication);
+  const listDoc = useServerFn(listDocuments);
 
   const schemeQ = useQuery({ queryKey: ["scheme", id], queryFn: () => getS({ data: { id } }), staleTime: 300_000 });
   const recQ = useQuery({ queryKey: ["recommendations"], queryFn: () => getRec(), staleTime: 60_000 });
   const savedQ = useQuery({ queryKey: ["saved"], queryFn: () => listSv(), staleTime: 60_000 });
+  const docsQ = useQuery({ queryKey: ["documents"], queryFn: () => listDoc(), staleTime: 60_000 });
+
+  const availableDocs = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of (docsQ.data ?? []) as any[]) {
+      const status = (d.status ?? "").toLowerCase();
+      if (status === "have" || status === "verified") {
+        const label = (d.label ?? d.doc_type ?? "").trim().toLowerCase();
+        if (label) set.add(label);
+      }
+    }
+    return set;
+  }, [docsQ.data]);
 
   const rec = useMemo<Recommendation | undefined>(() => {
     const list = recQ.data?.recommendations ?? [];
