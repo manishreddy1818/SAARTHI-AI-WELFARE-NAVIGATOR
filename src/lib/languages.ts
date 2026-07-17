@@ -1,0 +1,27 @@
+// 22 scheduled languages of India (Eighth Schedule of the Constitution) + English = 23.
+// `value` is stored in the profile; `label` is the English name with the native script.
+export const INDIAN_LANGUAGES: { value: string; label: string }[] = [
+  { value: "english", label: "English" },
+  { value: "hindi", label: "Hindi (हिन्दी)" },
+  { value: "assamese", label: "Assamese (অসমীয়া)" },
+  { value: "bengali", label: "Bengali (বাংলা)" },
+  { value: "bodo", label: "Bodo (बड़ो)" },
+  { value: "dogri", label: "Dogri (डोगरी)" },
+  { value: "gujarati", label: "Gujarati (ગુજરાતી)" },
+  { value: "kannada", label: "Kannada (ಕನ್ನಡ)" },
+  { value: "kashmiri", label: "Kashmiri (کٲشُر)" },
+  { value: "konkani", label: "Konkani (कोंकणी)" },
+  { value: "maithili", label: "Maithili (मैथिली)" },
+  { value: "malayalam", label: "Malayalam (മലയാളം)" },
+  { value: "manipuri", label: "Manipuri (মৈতৈলোন্)" },
+  { value: "marathi", label: "Marathi (मराठी)" },
+  { value: "nepali", label: "Nepali (नेपाली)" },
+  { value: "odia", label: "Odia (ଓଡ଼ିଆ)" },
+  { value: "punjabi", label: "Punjabi (ਪੰਜਾਬੀ)" },
+  { value: "sanskrit", label: "Sanskrit (संस्कृतम्)" },
+  { value: "santali", label: "Santali (ᱥᱟᱱᱛᱟᱲᱤ)" },
+  { value: "sindhi", label: "Sindhi (سنڌي)" },
+  { value: "tamil", label: "Tamil (தமிழ்)" },
+  { value: "telugu", label: "Telugu (తెలుగు)" },
+  { value: "urdu", label: "Urdu (اردو)" },
+];

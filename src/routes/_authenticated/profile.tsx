@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { getProfile, updateProfile } from "@/lib/citizen.functions";
+import { INDIAN_LANGUAGES } from "@/lib/languages";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -120,6 +121,23 @@ function ProfilePage() {
             </Row>
             <Row label="Household size">
               <Input type="number" min={1} max={30} value={form.household_size ?? ""} onChange={(e) => setForm({ ...form, household_size: e.target.value })} />
+            </Row>
+            <Row label="Preferred language">
+              <Select
+                value={form.preferred_language ?? undefined}
+                onValueChange={(v) => setForm({ ...form, preferred_language: v })}
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Select a language" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {INDIAN_LANGUAGES.map((l) => (
+                    <SelectItem key={l.value} value={l.value}>
+                      {l.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Row>
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-secondary/60 px-4 py-3">
