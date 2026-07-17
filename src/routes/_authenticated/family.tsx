@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { listFamily, upsertFamily, deleteFamily } from "@/lib/citizen.functions";
+import { listFamily, upsertFamily, deleteFamily, getRecommendations } from "@/lib/citizen.functions";
+import { buildHouseholdSummary, HouseholdSummaryCard } from "@/components/household-summary";
+import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/family")({
@@ -23,9 +25,18 @@ function FamilyPage() {
   const list = useServerFn(listFamily);
   const upsert = useServerFn(upsertFamily);
   const del = useServerFn(deleteFamily);
+  const recFn = useServerFn(getRecommendations);
+  const { user } = useAuth();
+  const firstName =
+    (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? "You";
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const q = useQuery({ queryKey: ["family"], queryFn: () => list() });
+  const recQ = useQuery({ queryKey: ["recommendations"], queryFn: () => recFn() });
+  const household =
+    recQ.data && q.data
+      ? buildHouseholdSummary(recQ.data.recommendations as any, q.data as any, firstName)
+      : null;
 
   const saveMut = useMutation({
     mutationFn: (row: any) => upsert({ data: row }),
@@ -74,6 +85,10 @@ function FamilyPage() {
           ) : (q.data ?? []).length === 0 ? (
             <EmptyState onAdd={() => { setEditing({}); setOpen(true); }} />
           ) : (
+            <>
+            {household && household.totalEligible > 0 && (
+              <div className="mb-6"><HouseholdSummaryCard summary={household} /></div>
+            )}
             <ul className="grid gap-4 sm:grid-cols-2">
               {q.data!.map((m: any) => (
                 <li key={m.id} className="rounded-3xl border border-border/70 bg-card p-6">
@@ -100,6 +115,7 @@ function FamilyPage() {
                 </li>
               ))}
             </ul>
+            </>
           )}
         </div>
       </section>
