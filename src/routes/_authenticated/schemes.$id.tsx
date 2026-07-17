@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { PageShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
-import { getScheme, getRecommendations, toggleSaved, listSaved, upsertApplication } from "@/lib/citizen.functions";
+import { getScheme, getRecommendations, toggleSaved, listSaved, upsertApplication, listDocuments } from "@/lib/citizen.functions";
 import type { Recommendation, ExplanationEnvelope } from "@/lib/rules-engine";
 import { buildEnvelope, envelopeFromRecommendation } from "@/lib/rules-engine";
 import { ActionPlanCard } from "@/components/action-plan";
@@ -43,10 +43,24 @@ function SchemeDetail() {
   const toggle = useServerFn(toggleSaved);
   const listSv = useServerFn(listSaved);
   const upsertApp = useServerFn(upsertApplication);
+  const listDoc = useServerFn(listDocuments);
 
   const schemeQ = useQuery({ queryKey: ["scheme", id], queryFn: () => getS({ data: { id } }), staleTime: 300_000 });
   const recQ = useQuery({ queryKey: ["recommendations"], queryFn: () => getRec(), staleTime: 60_000 });
   const savedQ = useQuery({ queryKey: ["saved"], queryFn: () => listSv(), staleTime: 60_000 });
+  const docsQ = useQuery({ queryKey: ["documents"], queryFn: () => listDoc(), staleTime: 60_000 });
+
+  const availableDocs = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of (docsQ.data ?? []) as any[]) {
+      const status = (d.status ?? "").toLowerCase();
+      if (status === "have" || status === "verified") {
+        const label = (d.label ?? d.doc_type ?? "").trim().toLowerCase();
+        if (label) set.add(label);
+      }
+    }
+    return set;
+  }, [docsQ.data]);
 
   const rec = useMemo<Recommendation | undefined>(() => {
     const list = recQ.data?.recommendations ?? [];
@@ -235,12 +249,33 @@ function SchemeDetail() {
 
           <Envelope title="Required documents" icon={FileText} accent="var(--trust)">
             <ul className="space-y-2 text-sm">
-              {(s.required_documents ?? []).map((d: string) => (
-                <li key={d} className="flex items-start gap-2">
-                  <FileText className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  {d}
+              {(s.required_documents ?? []).map((d: string) => {
+                const has = availableDocs.has(d.trim().toLowerCase());
+                return (
+                  <li key={d} className="flex items-start justify-between gap-2">
+                    <span className="flex items-start gap-2">
+                      <FileText className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                      <span>{d}</span>
+                    </span>
+                    {has ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[color-mix(in_oklch,var(--success)_15%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--success)]">
+                        <Check className="h-3 w-3" /> You have it
+                      </span>
+                    ) : (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                        <X className="h-3 w-3" /> Missing
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+              {(s.required_documents ?? []).length > 0 && (
+                <li className="pt-1">
+                  <Link to="/documents" className="text-xs font-medium text-[var(--trust)] hover:underline">
+                    Manage your documents →
+                  </Link>
                 </li>
-              ))}
+              )}
             </ul>
           </Envelope>
 

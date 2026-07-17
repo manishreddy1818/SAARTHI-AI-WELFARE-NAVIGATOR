@@ -211,12 +211,28 @@ export function ActionPlanCard({ schemeId, enabled = true }: { schemeId: string;
                   {!isDone && (
                     <div className="mt-2 flex gap-2">
                       <button
+                        onClick={() => stepMut.mutate({ step_no: s.step_no, status: "done" })}
+                        className="inline-flex items-center gap-1 rounded-full border border-[var(--success)]/40 bg-[color-mix(in_oklch,var(--success)_10%,transparent)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--success)] hover:bg-[color-mix(in_oklch,var(--success)_18%,transparent)]"
+                      >
+                        <Check className="h-3 w-3" /> Completed
+                      </button>
+                      <button
                         onClick={() => stepMut.mutate({ step_no: s.step_no, status: "skipped" })}
                         className={`rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground hover:bg-muted ${
                           isSkipped ? "bg-muted" : ""
                         }`}
                       >
                         {isSkipped ? "Skipped" : "Skip"}
+                      </button>
+                    </div>
+                  )}
+                  {isDone && (
+                    <div className="mt-2">
+                      <button
+                        onClick={() => stepMut.mutate({ step_no: s.step_no, status: "todo" })}
+                        className="rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground hover:bg-muted"
+                      >
+                        Mark as not done
                       </button>
                     </div>
                   )}
