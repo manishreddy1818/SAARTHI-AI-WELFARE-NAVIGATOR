@@ -4,6 +4,7 @@ import { z } from "zod";
 import { chatJSON, type ChatTurn } from "./ai-gateway.server";
 import { recommend, profileCompleteness, type ProfileFacts, type Scheme } from "./rules-engine";
 import { SAARTHI_SYSTEM_PROMPT } from "./ai-personality";
+import { buildDeterministicPlan, normalizePlan, type ActionPlan, type ActionStepStatus } from "./action-plan";
 
 // ---------------- Profile ----------------
 
@@ -480,4 +481,119 @@ export const deleteConversation = createServerFn({ method: "POST" })
       .eq("user_id", context.userId);
     if (error) throw error;
     return { ok: true };
+  });
+
+// ---------------- Action Plans ----------------
+
+export const getActionPlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => z.object({ scheme_id: z.string() }).parse(v))
+  .handler(async ({ data, context }) => {
+    const { data: row } = await context.supabase
+      .from("applications")
+      .select("action_plan")
+      .eq("user_id", context.userId)
+      .eq("scheme_id", data.scheme_id)
+      .maybeSingle();
+    return { plan: (row?.action_plan as ActionPlan | null) ?? null };
+  });
+
+export const generateActionPlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) =>
+    z.object({ scheme_id: z.string(), force: z.boolean().optional() }).parse(v),
+  )
+  .handler(async ({ data, context }) => {
+    // Load the scheme + existing application row (if any).
+    const [{ data: scheme }, { data: appRow }] = await Promise.all([
+      context.supabase.from("schemes").select("*").eq("id", data.scheme_id).maybeSingle(),
+      context.supabase
+        .from("applications")
+        .select("action_plan")
+        .eq("user_id", context.userId)
+        .eq("scheme_id", data.scheme_id)
+        .maybeSingle(),
+    ]);
+    if (!scheme) throw new Error("Scheme not found");
+
+    // If a plan already exists and we're not forcing, return it.
+    if (!data.force && appRow?.action_plan) {
+      return { plan: appRow.action_plan as ActionPlan, source: "cached" as const };
+    }
+
+    const fallback = buildDeterministicPlan(scheme as any);
+
+    // Try to refine with the LLM. Best-effort — never break unlock flow.
+    let plan: ActionPlan = fallback;
+    try {
+      const refined = await chatJSON<{ steps?: unknown[] }>({
+        messages: [
+          { role: "system", content: SAARTHI_SYSTEM_PROMPT },
+          {
+            role: "system",
+            content: `You are drafting a practical, kind action plan a citizen can actually follow to claim "${scheme.name}".
+Rewrite the provided draft steps in the citizen's tone — short, warm, plain English. Keep 4–7 steps. Never invent portals, offices, or numbers. Preserve the "type" (document/visit/apply/verify/wait) and "when" (today/next/later) of each step unless clearly wrong.
+Respond ONLY as JSON: { "steps": [ { "title": string, "detail": string, "type": "document"|"visit"|"apply"|"verify"|"wait", "when": "today"|"next"|"later", "estimated_time": string, "location": string, "prerequisites": string[], "expected_benefit_after": string } ] }`,
+          },
+          {
+            role: "user",
+            content: JSON.stringify({ scheme: { name: scheme.name, next_step: (scheme as any).next_step, official_url: (scheme as any).official_url }, draft_steps: fallback.steps }),
+          },
+        ],
+        temperature: 0.3,
+      });
+      const normalized = normalizePlan(refined);
+      if (normalized) plan = normalized;
+    } catch {
+      // silent — fallback already set
+    }
+
+    // Persist onto the application row (upsert so unlocking + plan is one flow).
+    const { error } = await context.supabase.from("applications").upsert(
+      {
+        user_id: context.userId,
+        scheme_id: data.scheme_id,
+        status: appRow ? undefined : "in_progress",
+        action_plan: plan as any,
+      } as any,
+      { onConflict: "user_id,scheme_id" },
+    );
+    if (error) throw error;
+
+    return { plan, source: "generated" as const };
+  });
+
+export const updateActionStep = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) =>
+    z
+      .object({
+        scheme_id: z.string(),
+        step_no: z.number().int().min(1).max(20),
+        status: z.enum(["todo", "done", "skipped"]),
+      })
+      .parse(v),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: row } = await context.supabase
+      .from("applications")
+      .select("action_plan")
+      .eq("user_id", context.userId)
+      .eq("scheme_id", data.scheme_id)
+      .maybeSingle();
+    const plan = (row?.action_plan as ActionPlan | null) ?? null;
+    if (!plan) throw new Error("No action plan yet for this scheme");
+    const next: ActionPlan = {
+      ...plan,
+      steps: plan.steps.map((s) =>
+        s.step_no === data.step_no ? { ...s, status: data.status as ActionStepStatus } : s,
+      ),
+    };
+    const { error } = await context.supabase
+      .from("applications")
+      .update({ action_plan: next as any })
+      .eq("user_id", context.userId)
+      .eq("scheme_id", data.scheme_id);
+    if (error) throw error;
+    return { plan: next };
   });
