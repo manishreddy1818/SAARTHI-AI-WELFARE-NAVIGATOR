@@ -318,7 +318,10 @@ function buildFamilySummary(members: any[] | null | undefined) {
 
 function buildApplicationsSummary(apps: any[] | null | undefined) {
   if (!apps || apps.length === 0) return "Applications so far: (none)";
-  const bits = apps.slice(0, 6).map((a) => `${a.scheme_name ?? a.scheme_id ?? "scheme"}: ${a.status ?? "in progress"}`);
+  const bits = apps.slice(0, 6).map((a) => {
+    const name = a.schemes?.name ?? a.scheme_id ?? "scheme";
+    return `${name}: ${a.status ?? "in progress"}`;
+  });
   return `Applications so far: ${bits.join("; ")}`;
 }
 
@@ -358,7 +361,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       context.supabase.from("family_members").select("*").eq("user_id", context.userId),
       context.supabase
         .from("applications")
-        .select("scheme_id, scheme_name, status, updated_at")
+        .select("scheme_id, status, updated_at, schemes(name)")
         .eq("user_id", context.userId)
         .order("updated_at", { ascending: false })
         .limit(6),
