@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       applications: {
         Row: {
+          action_plan: Json | null
           created_at: string
           id: string
           notes: string | null
@@ -25,6 +26,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          action_plan?: Json | null
           created_at?: string
           id?: string
           notes?: string | null
@@ -34,6 +36,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          action_plan?: Json | null
           created_at?: string
           id?: string
           notes?: string | null

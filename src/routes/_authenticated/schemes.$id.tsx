@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { getScheme, getRecommendations, toggleSaved, listSaved, upsertApplication } from "@/lib/citizen.functions";
 import type { Recommendation, ExplanationEnvelope } from "@/lib/rules-engine";
 import { buildEnvelope, envelopeFromRecommendation } from "@/lib/rules-engine";
+import { ActionPlanCard } from "@/components/action-plan";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/schemes/$id")({
@@ -78,6 +79,7 @@ function SchemeDetail() {
     onSuccess: () => {
       setUnlocked(true);
       qc.invalidateQueries({ queryKey: ["applications"] });
+      qc.invalidateQueries({ queryKey: ["action-plan", id] });
       toast.success("Opportunity unlocked. Steps saved to Applications.");
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not unlock."),
@@ -255,6 +257,10 @@ function SchemeDetail() {
               </a>
             </p>
           </Envelope>
+        </div>
+
+        <div className="mt-6">
+          <ActionPlanCard schemeId={id} />
         </div>
       </section>
     </PageShell>
