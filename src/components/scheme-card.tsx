@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, BadgeCheck, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BadgeCheck, HelpCircle, ShieldCheck, Sparkles } from "lucide-react";
 import type { Recommendation } from "@/lib/rules-engine";
 
 const CONFIDENCE_LABEL: Record<Recommendation["confidence"], string> = {
@@ -54,6 +54,17 @@ export function SchemeCard({ rec }: { rec: Recommendation }) {
           <Sparkles className="mt-0.5 h-3.5 w-3.5 text-[var(--saffron)]" />
           <span className="leading-relaxed">{rec.why_recommended}</span>
         </div>
+          {rec.gaps.length > 0 && (
+            <div
+              className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+              title={`Add ${rec.gaps.join(", ")} to strengthen this match.`}
+            >
+              <HelpCircle className="h-3 w-3" />
+              <span>
+                {rec.gaps.length} missing fact{rec.gaps.length === 1 ? "" : "s"} could raise confidence
+              </span>
+            </div>
+          )}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <ShieldCheck className="h-3.5 w-3.5" />
