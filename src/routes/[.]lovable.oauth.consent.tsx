@@ -38,7 +38,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
     <PageShell>
       <div className="mx-auto max-w-md px-6 py-16 text-sm text-muted-foreground">
         Could not load this authorization request: {String((error as Error)?.message ?? error)}
-      </main>
+      </div>
     </PageShell>
   ),
 });
