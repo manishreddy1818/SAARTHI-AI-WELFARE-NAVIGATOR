@@ -38,6 +38,11 @@ function CitizenDashboard() {
   const completeness = recsQ.data?.completeness ?? 0;
   const topRecs = (recsQ.data?.recommendations ?? []).slice(0, 3);
   const activeApps = (appsQ.data ?? []).filter((a: any) => a.status !== "rejected").length;
+  const totalMatches = (recsQ.data?.recommendations ?? []).length;
+  const topReason = topRecs[0]?.why_recommended as string | undefined;
+  const highConf = (recsQ.data?.recommendations ?? []).filter(
+    (r: any) => r.confidence === "high",
+  ).length;
 
   return (
     <PageShell>
@@ -56,6 +61,33 @@ function CitizenDashboard() {
             Here's your welfare journey — your assistant, your matches, your family, and your paperwork.
           </p>
         </div>
+
+        {totalMatches > 0 && (
+          <div
+            className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--saffron)]/30 bg-[color:oklch(0.98_0.03_75)] px-4 py-3 text-sm"
+            role="status"
+            aria-live="polite"
+          >
+            <span
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-primary-foreground"
+              style={{ backgroundColor: "var(--saffron)" }}
+              aria-hidden
+            >
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <p className="min-w-0 flex-1 text-foreground">
+              <span className="font-semibold">
+                SAARTHI found {totalMatches} scheme{totalMatches === 1 ? "" : "s"} for you
+              </span>
+              {highConf > 0 && (
+                <span className="text-muted-foreground"> · {highConf} high-confidence</span>
+              )}
+              {topReason && (
+                <span className="text-muted-foreground"> — {topReason}</span>
+              )}
+            </p>
+          </div>
+        )}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr,1fr]">
           <div className="rounded-3xl bg-[var(--trust)] p-8 text-primary-foreground shadow-lg">
