@@ -36,9 +36,9 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
   component: Consent,
   errorComponent: ({ error }) => (
     <PageShell>
-      <main className="mx-auto max-w-md px-6 py-16 text-sm text-muted-foreground">
+      <div className="mx-auto max-w-md px-6 py-16 text-sm text-muted-foreground">
         Could not load this authorization request: {String((error as Error)?.message ?? error)}
-      </main>
+      </div>
     </PageShell>
   ),
 });
@@ -72,7 +72,7 @@ function Consent() {
 
   return (
     <PageShell>
-      <main className="mx-auto flex max-w-md flex-col gap-6 px-6 py-16">
+      <div className="mx-auto flex max-w-md flex-col gap-6 px-6 py-16">
         <div className="flex flex-col items-center gap-3 text-center">
           <BrandMark size={52} />
           <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--font-display)" }}>
@@ -105,7 +105,7 @@ function Consent() {
             Approve
           </Button>
         </div>
-      </main>
+      </div>
     </PageShell>
   );
 }
