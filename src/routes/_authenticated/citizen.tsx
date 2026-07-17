@@ -5,6 +5,7 @@ import { ArrowRight, ClipboardList, FileText, Mic, Sparkles, Users } from "lucid
 import { PageShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { SchemeCard } from "@/components/scheme-card";
+import { JourneyTracker } from "@/components/journey-tracker";
 import { useAuth } from "@/hooks/use-auth";
 import {
   getRecommendations,
@@ -125,6 +126,15 @@ function CitizenDashboard() {
           <StatCard label="Family" value={String(famQ.data?.length ?? 0)} icon={Users} to="/family" />
           <StatCard label="Documents" value={String(docsQ.data?.length ?? 0)} icon={FileText} to="/documents" />
           <StatCard label="Applications" value={String(activeApps)} icon={ClipboardList} to="/applications" />
+        </div>
+
+        <div className="mt-6">
+          <JourneyTracker
+            completeness={completeness}
+            recommendations={recsQ.data?.recommendations ?? []}
+            documents={docsQ.data ?? []}
+            applications={appsQ.data ?? []}
+          />
         </div>
 
         <div className="mt-10">
