@@ -102,7 +102,11 @@ function FamilyPage() {
                       </p>
                       {m.occupation && <p className="mt-1 text-sm">{m.occupation}</p>}
                       {m.has_disability && (
-                        <span className="mt-2 inline-flex rounded-full bg-secondary px-2.5 py-0.5 text-xs">Person with disability</span>
+                        <span className="mt-2 inline-flex rounded-full bg-secondary px-2.5 py-0.5 text-xs">
+                          {m.disability_type === "other" && m.other_disability_type
+                            ? `${m.other_disability_type}${m.disability_percentage != null ? ` · ${m.disability_percentage}%` : ""}`
+                            : `Person with disability${m.disability_type ? ` · ${m.disability_type}` : ""}${m.disability_percentage != null ? ` · ${m.disability_percentage}%` : ""}`}
+                        </span>
                       )}
                     </div>
                     <div className="flex gap-1">
@@ -171,7 +175,7 @@ function MemberDialog({ value, onSubmit, pending }: { value: any; onSubmit: (r: 
             <Switch
               checked={!!form.has_disability}
               onCheckedChange={(v) =>
-                setForm({ ...form, has_disability: v, ...(v ? {} : { disability_type: "", disability_percentage: "" }) })
+                setForm({ ...form, has_disability: v, ...(v ? {} : { disability_type: "", disability_percentage: "", other_disability_type: "" }) })
               }
             />
           </div>
@@ -181,7 +185,7 @@ function MemberDialog({ value, onSubmit, pending }: { value: any; onSubmit: (r: 
                 <Label className="text-xs">Type of disability</Label>
                 <Select
                   value={form.disability_type ?? undefined}
-                  onValueChange={(v) => setForm({ ...form, disability_type: v })}
+                  onValueChange={(v) => setForm({ ...form, disability_type: v, other_disability_type: v === "other" ? form.other_disability_type : "" })}
                 >
                   <SelectTrigger className="capitalize"><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>
@@ -202,6 +206,18 @@ function MemberDialog({ value, onSubmit, pending }: { value: any; onSubmit: (r: 
                   onChange={(e) => setForm({ ...form, disability_percentage: e.target.value })}
                 />
               </div>
+              {form.disability_type === "other" && (
+                <div className="grid gap-1.5 sm:col-span-2">
+                  <Label className="text-xs">Please specify the disability</Label>
+                  <Input
+                    placeholder="e.g. cerebral palsy, autism spectrum, chronic neurological condition"
+                    value={form.other_disability_type ?? ""}
+                    onChange={(e) => setForm({ ...form, other_disability_type: e.target.value })}
+                    maxLength={200}
+                  />
+                  <p className="text-xs text-muted-foreground">This helps SAARTHI match schemes for the specific condition.</p>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -219,6 +235,10 @@ function MemberDialog({ value, onSubmit, pending }: { value: any; onSubmit: (r: 
             if (!patch.has_disability) {
               delete patch.disability_type;
               delete patch.disability_percentage;
+              delete patch.other_disability_type;
+            }
+            if (patch.disability_type !== "other") {
+              delete patch.other_disability_type;
             }
             onSubmit(patch);
           }}

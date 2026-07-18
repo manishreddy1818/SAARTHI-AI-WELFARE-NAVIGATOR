@@ -46,7 +46,7 @@ function ProfilePage() {
     for (const k of [
       "full_name","age","gender","state","district","occupation","monthly_income",
       "marital_status","category","household_type","household_size","has_disability","preferred_language",
-      "disability_type","disability_percentage",
+      "disability_type","disability_percentage","other_disability_type",
     ]) {
       const v = form[k];
       if (v === "" || v == null) continue;
@@ -150,7 +150,7 @@ function ProfilePage() {
               </div>
               <Switch
                 checked={!!form.has_disability}
-                onCheckedChange={(v) => setForm({ ...form, has_disability: v, ...(v ? {} : { disability_type: "", disability_percentage: "" }) })}
+                onCheckedChange={(v) => setForm({ ...form, has_disability: v, ...(v ? {} : { disability_type: "", disability_percentage: "", other_disability_type: "" }) })}
               />
             </div>
             {form.has_disability && (
@@ -159,7 +159,7 @@ function ProfilePage() {
                   <Label className="text-xs">Type of disability</Label>
                   <Choice
                     value={form.disability_type}
-                    onChange={(v) => setForm({ ...form, disability_type: v })}
+                    onChange={(v) => setForm({ ...form, disability_type: v, other_disability_type: v === "other" ? form.other_disability_type : "" })}
                     options={["locomotor","visual","hearing","speech","intellectual","mental illness","multiple","other"]}
                   />
                 </div>
@@ -174,6 +174,18 @@ function ProfilePage() {
                     onChange={(e) => setForm({ ...form, disability_percentage: e.target.value })}
                   />
                 </div>
+                {form.disability_type === "other" && (
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label className="text-xs">Please specify the disability</Label>
+                    <Input
+                      placeholder="e.g. cerebral palsy, autism spectrum, chronic neurological condition"
+                      value={form.other_disability_type ?? ""}
+                      onChange={(e) => setForm({ ...form, other_disability_type: e.target.value })}
+                      maxLength={200}
+                    />
+                    <p className="text-xs text-muted-foreground">This helps SAARTHI match schemes for your specific condition.</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

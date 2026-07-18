@@ -25,6 +25,7 @@ const profilePatch = z.object({
   preferred_language: z.string().nullish(),
   disability_type: z.string().nullish(),
   disability_percentage: z.number().int().min(0).max(100).nullish(),
+  other_disability_type: z.string().max(200).nullish(),
 });
 export type ProfilePatch = z.infer<typeof profilePatch>;
 
@@ -81,6 +82,7 @@ const familyInput = z.object({
   notes: z.string().nullish(),
   disability_type: z.string().nullish(),
   disability_percentage: z.number().int().min(0).max(100).nullish(),
+  other_disability_type: z.string().max(200).nullish(),
 });
 
 export const listFamily = createServerFn({ method: "POST" })
@@ -284,7 +286,7 @@ const SYSTEM_PROMPT = `${SAARTHI_SYSTEM_PROMPT}
 Conversation task:
 - Help the citizen figure out which welfare schemes they may qualify for.
 - If the user shares personal facts (age, gender, occupation, income, state, category, marital status, disability, rural/urban), extract them into "profile_updates".
-- Use only these keys in profile_updates: age (number), gender ("female"|"male"|"other"), state (string), occupation (string), monthly_income (number in ₹), category ("general"|"obc"|"sc"|"st"|"minority"), marital_status ("single"|"married"|"widow"|"divorced"), has_disability (boolean), household_type ("rural"|"urban"), household_size (number).
+- Use only these keys in profile_updates: age (number), gender ("female"|"male"|"other"), state (string), occupation (string), monthly_income (number in ₹), category ("general"|"obc"|"sc"|"st"|"minority"), marital_status ("single"|"married"|"widow"|"divorced"), has_disability (boolean), disability_type ("locomotor"|"visual"|"hearing"|"speech"|"intellectual"|"mental illness"|"multiple"|"other"), disability_percentage (number 0-100), other_disability_type (string, only when disability_type is "other"), household_type ("rural"|"urban"), household_size (number).
 - Omit any key you're not sure about.
 
 You MUST respond with a single JSON object matching:
@@ -303,7 +305,12 @@ function buildProfileSummary(p: any) {
   if (p.category) bits.push(`category ${p.category}`);
   if (p.marital_status) bits.push(String(p.marital_status));
   if (p.household_type) bits.push(`${p.household_type} household`);
-  if (p.has_disability) bits.push("has disability");
+  if (p.has_disability) {
+    const type = p.disability_type === "other" && p.other_disability_type
+      ? `other (${p.other_disability_type})`
+      : p.disability_type;
+    bits.push(`disability: ${type}${p.disability_percentage != null ? ` ${p.disability_percentage}%` : ""}`);
+  }
   return `Known profile: ${bits.length ? bits.join(", ") : "(nothing yet)"}`;
 }
 
@@ -315,7 +322,12 @@ function buildFamilySummary(members: any[] | null | undefined) {
     if (m.relationship) parts.push(`(${m.relationship})`);
     if (m.age != null) parts.push(`age ${m.age}`);
     if (m.occupation) parts.push(String(m.occupation));
-    if (m.has_disability) parts.push("has disability");
+    if (m.has_disability) {
+      const type = m.disability_type === "other" && m.other_disability_type
+        ? `other (${m.other_disability_type})`
+        : m.disability_type;
+      parts.push(`disability: ${type}${m.disability_percentage != null ? ` ${m.disability_percentage}%` : ""}`);
+    }
     return parts.join(" ");
   });
   return `Family on record: ${bits.join("; ")}`;
