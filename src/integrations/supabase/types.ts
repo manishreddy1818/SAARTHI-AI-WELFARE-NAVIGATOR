@@ -160,6 +160,7 @@ export type Database = {
           name: string
           notes: string | null
           occupation: string | null
+          other_disability_type: string | null
           relationship: string
           updated_at: string
           user_id: string
@@ -176,6 +177,7 @@ export type Database = {
           name: string
           notes?: string | null
           occupation?: string | null
+          other_disability_type?: string | null
           relationship: string
           updated_at?: string
           user_id: string
@@ -192,6 +194,7 @@ export type Database = {
           name?: string
           notes?: string | null
           occupation?: string | null
+          other_disability_type?: string | null
           relationship?: string
           updated_at?: string
           user_id?: string
@@ -364,6 +367,7 @@ export type Database = {
           monthly_income: number | null
           occupation: string | null
           onboarding_done: boolean
+          other_disability_type: string | null
           preferred_language: string
           profile_completeness: number
           state: string | null
@@ -392,6 +396,7 @@ export type Database = {
           monthly_income?: number | null
           occupation?: string | null
           onboarding_done?: boolean
+          other_disability_type?: string | null
           preferred_language?: string
           profile_completeness?: number
           state?: string | null
@@ -420,6 +425,7 @@ export type Database = {
           monthly_income?: number | null
           occupation?: string | null
           onboarding_done?: boolean
+          other_disability_type?: string | null
           preferred_language?: string
           profile_completeness?: number
           state?: string | null
