@@ -231,6 +231,10 @@ function MemberDialog({ value, onSubmit, pending }: { value: any; onSubmit: (r: 
             if (!patch.has_disability) {
               delete patch.disability_type;
               delete patch.disability_percentage;
+              delete patch.other_disability_type;
+            }
+            if (patch.disability_type !== "other") {
+              delete patch.other_disability_type;
             }
             onSubmit(patch);
           }}
