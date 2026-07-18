@@ -162,12 +162,48 @@ function MemberDialog({ value, onSubmit, pending }: { value: any; onSubmit: (r: 
             <Input value={form.occupation ?? ""} onChange={(e) => setForm({ ...form, occupation: e.target.value })} />
           </div>
         </div>
-        <div className="flex items-center justify-between rounded-xl bg-secondary/60 px-4 py-3">
-          <div>
-            <p className="text-sm font-medium">Person with disability</p>
-            <p className="text-xs text-muted-foreground">Helps match disability schemes.</p>
+        <div className="rounded-xl bg-secondary/60 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Person with disability</p>
+              <p className="text-xs text-muted-foreground">Helps match disability schemes.</p>
+            </div>
+            <Switch
+              checked={!!form.has_disability}
+              onCheckedChange={(v) =>
+                setForm({ ...form, has_disability: v, ...(v ? {} : { disability_type: "", disability_percentage: "" }) })
+              }
+            />
           </div>
-          <Switch checked={!!form.has_disability} onCheckedChange={(v) => setForm({ ...form, has_disability: v })} />
+          {form.has_disability && (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-1.5">
+                <Label className="text-xs">Type of disability</Label>
+                <Select
+                  value={form.disability_type ?? undefined}
+                  onValueChange={(v) => setForm({ ...form, disability_type: v })}
+                >
+                  <SelectTrigger className="capitalize"><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    {["locomotor","visual","hearing","speech","intellectual","mental illness","multiple","other"].map((o) => (
+                      <SelectItem key={o} value={o} className="capitalize">{o}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1.5">
+                <Label className="text-xs">Percentage (%)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  placeholder="e.g. 60"
+                  value={form.disability_percentage ?? ""}
+                  onChange={(e) => setForm({ ...form, disability_percentage: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <DialogFooter>
@@ -177,6 +213,13 @@ function MemberDialog({ value, onSubmit, pending }: { value: any; onSubmit: (r: 
             const patch: any = { ...form };
             if (patch.age !== undefined && patch.age !== "") patch.age = Number(patch.age);
             else delete patch.age;
+            if (patch.disability_percentage !== undefined && patch.disability_percentage !== "")
+              patch.disability_percentage = Number(patch.disability_percentage);
+            else delete patch.disability_percentage;
+            if (!patch.has_disability) {
+              delete patch.disability_type;
+              delete patch.disability_percentage;
+            }
             onSubmit(patch);
           }}
           disabled={pending}
