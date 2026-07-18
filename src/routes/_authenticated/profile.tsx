@@ -46,11 +46,13 @@ function ProfilePage() {
     for (const k of [
       "full_name","age","gender","state","district","occupation","monthly_income",
       "marital_status","category","household_type","household_size","has_disability","preferred_language",
+      "disability_type","disability_percentage",
     ]) {
       const v = form[k];
       if (v === "" || v == null) continue;
       patch[k] = k === "age" || k === "household_size" ? Number(v) :
                  k === "monthly_income" ? Number(v) :
+                 k === "disability_percentage" ? Number(v) :
                  v;
     }
     mut.mutate(patch);
@@ -140,12 +142,40 @@ function ProfilePage() {
               </Select>
             </Row>
           </div>
-          <div className="flex items-center justify-between rounded-2xl bg-secondary/60 px-4 py-3">
-            <div>
-              <p className="text-sm font-medium">Person with disability (80%+)</p>
-              <p className="text-xs text-muted-foreground">Unlocks disability-focused schemes.</p>
+          <div className="rounded-2xl bg-secondary/60 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Person with disability</p>
+                <p className="text-xs text-muted-foreground">Unlocks disability-focused schemes. Add type & percentage for a better match.</p>
+              </div>
+              <Switch
+                checked={!!form.has_disability}
+                onCheckedChange={(v) => setForm({ ...form, has_disability: v, ...(v ? {} : { disability_type: "", disability_percentage: "" }) })}
+              />
             </div>
-            <Switch checked={!!form.has_disability} onCheckedChange={(v) => setForm({ ...form, has_disability: v })} />
+            {form.has_disability && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Type of disability</Label>
+                  <Choice
+                    value={form.disability_type}
+                    onChange={(v) => setForm({ ...form, disability_type: v })}
+                    options={["locomotor","visual","hearing","speech","intellectual","mental illness","multiple","other"]}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Percentage (%)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    placeholder="e.g. 60"
+                    value={form.disability_percentage ?? ""}
+                    onChange={(e) => setForm({ ...form, disability_percentage: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex justify-end">
             <Button size="lg" className="h-12 rounded-full px-8" onClick={save} disabled={mut.isPending}>
