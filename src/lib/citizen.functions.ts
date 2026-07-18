@@ -23,6 +23,8 @@ const profilePatch = z.object({
   household_size: z.number().int().min(1).max(30).nullish(),
   household_type: z.enum(["rural", "urban"]).nullish(),
   preferred_language: z.string().nullish(),
+  disability_type: z.string().nullish(),
+  disability_percentage: z.number().int().min(0).max(100).nullish(),
 });
 export type ProfilePatch = z.infer<typeof profilePatch>;
 
@@ -77,6 +79,8 @@ const familyInput = z.object({
   monthly_income: z.number().min(0).nullish(),
   has_disability: z.boolean().nullish(),
   notes: z.string().nullish(),
+  disability_type: z.string().nullish(),
+  disability_percentage: z.number().int().min(0).max(100).nullish(),
 });
 
 export const listFamily = createServerFn({ method: "POST" })
