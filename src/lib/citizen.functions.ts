@@ -25,6 +25,7 @@ const profilePatch = z.object({
   preferred_language: z.string().nullish(),
   disability_type: z.string().nullish(),
   disability_percentage: z.number().int().min(0).max(100).nullish(),
+  other_disability_type: z.string().max(200).nullish(),
 });
 export type ProfilePatch = z.infer<typeof profilePatch>;
 
@@ -81,6 +82,7 @@ const familyInput = z.object({
   notes: z.string().nullish(),
   disability_type: z.string().nullish(),
   disability_percentage: z.number().int().min(0).max(100).nullish(),
+  other_disability_type: z.string().max(200).nullish(),
 });
 
 export const listFamily = createServerFn({ method: "POST" })
