@@ -1,0 +1,2 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS disability_type TEXT, ADD COLUMN IF NOT EXISTS disability_percentage INTEGER;
+ALTER TABLE public.family_members ADD COLUMN IF NOT EXISTS disability_type TEXT, ADD COLUMN IF NOT EXISTS disability_percentage INTEGER;

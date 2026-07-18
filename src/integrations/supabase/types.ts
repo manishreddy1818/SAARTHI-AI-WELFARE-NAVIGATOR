@@ -151,6 +151,8 @@ export type Database = {
         Row: {
           age: number | null
           created_at: string
+          disability_percentage: number | null
+          disability_type: string | null
           gender: string | null
           has_disability: boolean
           id: string
@@ -165,6 +167,8 @@ export type Database = {
         Insert: {
           age?: number | null
           created_at?: string
+          disability_percentage?: number | null
+          disability_type?: string | null
           gender?: string | null
           has_disability?: boolean
           id?: string
@@ -179,6 +183,8 @@ export type Database = {
         Update: {
           age?: number | null
           created_at?: string
+          disability_percentage?: number | null
+          disability_type?: string | null
           gender?: string | null
           has_disability?: boolean
           id?: string
@@ -340,6 +346,8 @@ export type Database = {
           age: number | null
           category: string | null
           created_at: string
+          disability_percentage: number | null
+          disability_type: string | null
           district: string | null
           education: string | null
           full_name: string | null
@@ -366,6 +374,8 @@ export type Database = {
           age?: number | null
           category?: string | null
           created_at?: string
+          disability_percentage?: number | null
+          disability_type?: string | null
           district?: string | null
           education?: string | null
           full_name?: string | null
@@ -392,6 +402,8 @@ export type Database = {
           age?: number | null
           category?: string | null
           created_at?: string
+          disability_percentage?: number | null
+          disability_type?: string | null
           district?: string | null
           education?: string | null
           full_name?: string | null
