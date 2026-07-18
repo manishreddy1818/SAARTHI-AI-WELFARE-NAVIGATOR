@@ -102,7 +102,11 @@ function FamilyPage() {
                       </p>
                       {m.occupation && <p className="mt-1 text-sm">{m.occupation}</p>}
                       {m.has_disability && (
-                        <span className="mt-2 inline-flex rounded-full bg-secondary px-2.5 py-0.5 text-xs">Person with disability</span>
+                        <span className="mt-2 inline-flex rounded-full bg-secondary px-2.5 py-0.5 text-xs">
+                          {m.disability_type === "other" && m.other_disability_type
+                            ? `${m.other_disability_type}${m.disability_percentage != null ? ` · ${m.disability_percentage}%` : ""}`
+                            : `Person with disability${m.disability_type ? ` · ${m.disability_type}` : ""}${m.disability_percentage != null ? ` · ${m.disability_percentage}%` : ""}`}
+                        </span>
                       )}
                     </div>
                     <div className="flex gap-1">
